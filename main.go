@@ -10,9 +10,9 @@ func handleMainPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	StartDiscordBot()
-	port := os.Getenv("PORT")
+	go StartDiscordBot()
 
+	port := os.Getenv("PORT")
 	http.HandleFunc("/", handleMainPage)
 	err := http.ListenAndServe(":"+port, nil)
 	if err != nil {

@@ -1,1 +1,1 @@
-web: weisbot
+web: weissbot

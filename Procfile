@@ -1,1 +1,1 @@
-web: weissbot
+worker: weissbot

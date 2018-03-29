@@ -1,38 +1,24 @@
 package main
 
 import (
-	"net/http"
-
 	"github.com/antchfx/htmlquery"
 	"golang.org/x/net/html"
 )
 
-func retrieveCotdPage() *html.Node {
-	resp, err := http.Get("http://cf-vanguard.com/todays-card/")
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
+const baseVGURL = "http://cf-vanguard.com"
+const cotdVGPageURL = "http://cf-vanguard.com/todays-card/"
+const vanguardName = "vg"
 
-	doc, err := htmlquery.Parse(resp.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	return doc
+// GetVGCotd returns array of COTD image URLs
+func GetVGCotd() []string {
+	return getVGCotdURLFromPage(RetrievePage(cotdVGPageURL))
 }
 
-// GetCotd returns array of COTD image URLs
-func GetCotd() []string {
-	return getCotdURLFromPage(retrieveCotdPage())
-}
-
-func getCotdURLFromPage(doc *html.Node) []string {
-	baseurl := "http://cf-vanguard.com"
+func getVGCotdURLFromPage(doc *html.Node) []string {
 	cotdUrls := make([]string, 0)
 
 	for _, data := range htmlquery.Find(doc, "//p[contains(@class, 'taC mb08')]/img") {
-		cotdUrls = append(cotdUrls, baseurl+htmlquery.SelectAttr(data, "src"))
+		cotdUrls = append(cotdUrls, baseVGURL+htmlquery.SelectAttr(data, "src"))
 	}
 
 	return cotdUrls

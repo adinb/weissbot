@@ -10,8 +10,15 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-func sendVanguardCotd(s *discordgo.Session, m *discordgo.MessageCreate) {
-	cotdUrls := GetCotd()
+func sendCotd(game string, s *discordgo.Session, m *discordgo.MessageCreate) {
+
+	var cotdUrls []string
+	switch game {
+	case vanguardName:
+		cotdUrls = GetVGCotd()
+	case wsName:
+		cotdUrls = GetWSCotd()
+	}
 
 	channel, err := s.State.Channel(m.ChannelID)
 	if err != nil {
@@ -45,7 +52,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	if strings.HasPrefix(m.Content, ":cotd vg") {
-		sendVanguardCotd(s, m)
+		sendCotd(vanguardName, s, m)
+	} else if strings.HasPrefix(m.Content, ":cotd ws") {
+		sendCotd(wsName, s, m)
 	}
 }
 

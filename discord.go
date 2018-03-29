@@ -10,6 +10,30 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+func sendImageFromURL(url string, s *discordgo.Session, c *discordgo.Channel) {
+	var embed discordgo.MessageEmbed
+	var embedImage discordgo.MessageEmbedImage
+
+	embedImage.URL = url
+	embed.Image = &embedImage
+	fmt.Println(embed.URL)
+	s.ChannelMessageSendEmbed(c.ID, &embed)
+}
+
+func speedCheck(s *discordgo.Session, m *discordgo.MessageCreate) {
+	channel, err := s.State.Channel(m.ChannelID)
+	if err != nil {
+		return
+	}
+
+	_, err = s.ChannelMessageSend(channel.ID, "Speedcheck!!")
+	if err != nil {
+		return
+	}
+
+	sendImageFromURL(getRandomDorenoCardURL(), s, channel)
+}
+
 func sendCotd(game string, s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	var cotdUrls []string
@@ -26,19 +50,12 @@ func sendCotd(game string, s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	_, err = s.ChannelMessageSend(channel.ID, "Here are CoTD you asked :video_game:")
-
 	if err != nil {
 		return
 	}
 
 	for _, cotdURL := range cotdUrls {
-		var embed discordgo.MessageEmbed
-		var embedImage discordgo.MessageEmbedImage
-
-		embedImage.URL = cotdURL
-		embed.Image = &embedImage
-		fmt.Println(embed.URL)
-		s.ChannelMessageSendEmbed(channel.ID, &embed)
+		sendImageFromURL(cotdURL, s, channel)
 	}
 }
 
@@ -53,8 +70,16 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if strings.HasPrefix(m.Content, ":cotd vg") {
 		sendCotd(vanguardName, s, m)
-	} else if strings.HasPrefix(m.Content, ":cotd ws") {
+		return
+	}
+
+	if strings.HasPrefix(m.Content, ":cotd ws") {
 		sendCotd(wsName, s, m)
+		return
+	}
+
+	if strings.HasPrefix(m.Content, ":speedcheck") {
+		speedCheck(s, m)
 	}
 }
 

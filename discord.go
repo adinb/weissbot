@@ -10,6 +10,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+var weissStatus string
+
 func sendImageFromURL(url string, s *discordgo.Session, c *discordgo.Channel) {
 	var embed discordgo.MessageEmbed
 	var embedImage discordgo.MessageEmbedImage
@@ -60,7 +62,8 @@ func sendCotd(game string, s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func ready(s *discordgo.Session, event *discordgo.Event) {
-	s.UpdateStatus(0, "with Schwarz")
+	weissStatus = "with Schwarz"
+	s.UpdateStatus(0, weissStatus)
 }
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -83,17 +86,27 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
+func statusPoller(statusChannel <-chan string, s *discordgo.Session) {
+	for status := range statusChannel {
+		if weissStatus != status {
+			weissStatus = status
+			s.UpdateStatus(0, weissStatus)
+		}
+	}
+}
+
 // StartDiscordBot will start the discord bot
-func StartDiscordBot() {
+func StartDiscordBot(statusChannel <-chan string) {
 	token := os.Getenv("TOKEN")
 	discord, err := discordgo.New("Bot " + token)
 	if err != nil {
 		panic(err)
-		return
 	}
 
 	discord.AddHandler(ready)
 	discord.AddHandler(messageCreate)
+
+	go statusPoller(statusChannel, discord)
 
 	err = discord.Open()
 	if err != nil {

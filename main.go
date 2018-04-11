@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
 var discordStatus chan string
@@ -35,15 +37,20 @@ func updateDiscordStatus(w http.ResponseWriter, r *http.Request) {
 func main() {
 	discordStatus = make(chan string)
 
-	go StartDiscordBot(discordStatus)
-
 	port := os.Getenv("PORT")
 	http.HandleFunc("/", handleMainPage)
-	http.HandleFunc("/updateDiscordStatus", updateDiscordStatus)
+	http.HandleFunc("/discordstatus", updateDiscordStatus)
 
-	err := http.ListenAndServe(":"+port, nil)
-	if err != nil {
-		panic(err)
-	}
+	go StartDiscordBot(discordStatus)
 
+	go func() {
+		err := http.ListenAndServe(":"+port, nil)
+		if err != nil {
+			panic(err)
+		}
+	}()
+
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	<-sc
 }

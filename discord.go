@@ -3,9 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/signal"
 	"strings"
-	"syscall"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -62,7 +60,6 @@ func sendCotd(game string, s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func ready(s *discordgo.Session, event *discordgo.Event) {
-	weissStatus = "with Schwarz"
 	s.UpdateStatus(0, weissStatus)
 }
 
@@ -98,6 +95,7 @@ func statusPoller(statusChannel <-chan string, s *discordgo.Session) {
 // StartDiscordBot will start the discord bot
 func StartDiscordBot(statusChannel <-chan string) {
 	token := os.Getenv("TOKEN")
+	weissStatus = "with Schwarz"
 	discord, err := discordgo.New("Bot " + token)
 	if err != nil {
 		panic(err)
@@ -106,16 +104,16 @@ func StartDiscordBot(statusChannel <-chan string) {
 	discord.AddHandler(ready)
 	discord.AddHandler(messageCreate)
 
-	go statusPoller(statusChannel, discord)
+	// go statusPoller(statusChannel, discord)
 
 	err = discord.Open()
 	if err != nil {
 		panic(err)
 	}
 
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
-	<-sc
+	// sc := make(chan os.Signal, 1)
+	// signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	// <-sc
 
 	discord.Close()
 }

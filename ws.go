@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/antchfx/htmlquery"
 	"golang.org/x/net/html"
 )
@@ -21,7 +19,6 @@ func getWSCotdURLFromPage(doc *html.Node) []string {
 
 	for _, data := range htmlquery.Find(doc, "//div[contains(@class, 'entry-content')]/p/img") {
 		cotdUrls = append(cotdUrls, baseWSURL+htmlquery.SelectAttr(data, "src"))
-		fmt.Println(cotdUrls)
 	}
 
 	return cotdUrls

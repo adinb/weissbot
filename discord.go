@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -104,16 +106,16 @@ func StartDiscordBot(statusChannel <-chan string) {
 	discord.AddHandler(ready)
 	discord.AddHandler(messageCreate)
 
-	// go statusPoller(statusChannel, discord)
+	go statusPoller(statusChannel, discord)
 
 	err = discord.Open()
 	if err != nil {
 		panic(err)
 	}
 
-	// sc := make(chan os.Signal, 1)
-	// signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
-	// <-sc
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	<-sc
 
 	discord.Close()
 }

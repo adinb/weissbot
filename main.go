@@ -24,6 +24,7 @@ func updateDiscordStatus(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
+
 	var message discordStatusStruct
 	err = json.Unmarshal(body, &message)
 	if err != nil {
@@ -31,7 +32,7 @@ func updateDiscordStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	discordStatus <- message.Status
-	w.Write([]byte(""))
+	w.Write([]byte(message.Status))
 }
 
 func main() {

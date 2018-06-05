@@ -44,6 +44,8 @@ func sendCotd(game string, s *discordgo.Session, m *discordgo.MessageCreate) {
 		cotdUrls = GetVGCotd()
 	case wsName:
 		cotdUrls = GetWSCotd()
+	case bfName:
+		cotdUrls = GetBFCotd()
 	}
 
 	channel, err := s.State.Channel(m.ChannelID)
@@ -77,6 +79,11 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if strings.HasPrefix(m.Content, ":cotd ws") {
 		sendCotd(wsName, s, m)
+		return
+	}
+
+	if strings.HasPrefix(m.Content, ":cotd bf") {
+		sendCotd(bfName, s, m)
 		return
 	}
 

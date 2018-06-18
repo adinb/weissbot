@@ -3,25 +3,25 @@
 	"ignore": "test",
 	"package": [
 		{
-			"checksumSHA1": "BUv1cxQ0ow5y89El2GC8Jk+U0LM=",
+			"checksumSHA1": "4Z4pIUfcMLu5ltZNRU/j8AH2lzc=",
 			"path": "github.com/antchfx/htmlquery",
 			"revision": "9f7717ac9bac5f660391c57e3d496b3c7cf9741f",
 			"revisionTime": "2017-12-05T02:54:47Z"
 		},
 		{
-			"checksumSHA1": "AUrQZELC3UjJ99uKoA+H3CszWVo=",
+			"checksumSHA1": "HABc3TmlKCm6dgpAjsOgDBfd3tU=",
 			"path": "github.com/antchfx/xpath",
 			"revision": "da6624a57bffc012f598c42f781bd5919fbfadb2",
 			"revisionTime": "2018-02-24T01:49:21Z"
 		},
 		{
-			"checksumSHA1": "xI46JvSh8YxnReSOBB8epu2EkOo=",
+			"checksumSHA1": "g2nLM7nusAauL6hTFiiqU9fXa+w=",
 			"path": "github.com/bwmarrin/discordgo",
 			"revision": "8d5ab59c63e553fd2030706008a806a8b553188c",
 			"revisionTime": "2018-02-01T00:25:41Z"
 		},
 		{
-			"checksumSHA1": "+1LsRRZKa06yTFg/Tu5NCsyHxOA=",
+			"checksumSHA1": "tvVmLXS0w9aMKlZkVyiECxtbZXI=",
 			"path": "github.com/gorilla/websocket",
 			"revision": "eb925808374e5ca90c83401a40d711dc08c0c0f6",
 			"revisionTime": "2018-03-06T18:15:48Z"

@@ -6,11 +6,13 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"net/http"
 
 	"github.com/bwmarrin/discordgo"
 )
 
 var weissStatus string
+var httpClient *http.Client
 
 func sendImageFromURL(url string, s *discordgo.Session, c *discordgo.Channel) {
 	var embed discordgo.MessageEmbed
@@ -63,6 +65,18 @@ func sendCotd(game string, s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
+func sendDailyRkgk(s *discordgo.Session, m *discordgo.MessageCreate) {
+	channel, err := s.State.Channel(m.ChannelID)
+	if err != nil {
+		return
+	}
+
+	_, err = s.ChannelMessageSend(channel.ID, ":angry:")
+	dailyRkgk := GetDailyRkgk(httpClient)
+	_, err = s.ChannelMessageSend(channel.ID, dailyRkgk.id)
+	sendImageFromURL(dailyRkgk.mediaURL, s, channel)
+}
+
 func ready(s *discordgo.Session, event *discordgo.Event) {
 	s.UpdateStatus(0, weissStatus)
 }
@@ -89,6 +103,12 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if strings.HasPrefix(m.Content, ":speedcheck") {
 		speedCheck(s, m)
+		return
+	}
+
+	if strings.HasPrefix(m.Content, ":dailyrkgk") {
+		sendDailyRkgk(s, m)
+		return
 	}
 }
 
@@ -102,9 +122,10 @@ func statusPoller(statusChannel <-chan string, s *discordgo.Session) {
 }
 
 // StartDiscordBot will start the discord bot
-func StartDiscordBot(statusChannel <-chan string) {
+func StartDiscordBot(statusChannel <-chan string, client *http.Client) {
 	token := os.Getenv("TOKEN")
 	weissStatus = "with Schwarz"
+	httpClient = client
 	discord, err := discordgo.New("Bot " + token)
 	if err != nil {
 		panic(err)

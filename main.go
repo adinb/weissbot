@@ -1,12 +1,15 @@
 package main
 
 import (
+  "log"
+  "time"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"github.com/joho/godotenv"
 )
 
 var discordStatus chan string
@@ -38,11 +41,22 @@ func updateDiscordStatus(w http.ResponseWriter, r *http.Request) {
 func main() {
 	discordStatus = make(chan string)
 
+	if os.Getenv("ENV") != "production" {
+    err := godotenv.Load()
+    if err != nil {
+      log.Fatal(err)
+    }
+  }
+
 	port := os.Getenv("PORT")
 	http.HandleFunc("/", handleMainPage)
 	http.HandleFunc("/discordstatus", updateDiscordStatus)
 
-	go StartDiscordBot(discordStatus)
+	httpClient := &http.Client {
+		Timeout: time.Second * 10,
+	}
+
+	go StartDiscordBot(discordStatus, httpClient)
 
 	go func() {
 		err := http.ListenAndServe(":"+port, nil)

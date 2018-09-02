@@ -10,7 +10,7 @@ const cotdWSPageURL = "https://ws-tcg.com/todays-card/"
 const wsName = "ws"
 
 // GetWSCotd returns array of COTD image URLs
-func GetWSCotd() []string {
+func getWSCotd() []string {
 	return getWSCotdURLFromPage(RetrievePage(cotdWSPageURL))
 }
 

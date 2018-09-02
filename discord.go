@@ -2,17 +2,31 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
-	"net/http"
 
 	"github.com/bwmarrin/discordgo"
 )
 
 var weissStatus string
 var httpClient *http.Client
+
+type discordServiceChannelsStruct struct {
+	statusChannel chan string
+}
+
+type discordStatusStruct struct {
+	Status string
+}
+
+func createDiscordServiceChannel() discordServiceChannelsStruct {
+	var chanStruct discordServiceChannelsStruct
+	chanStruct.statusChannel = make(chan string)
+	return chanStruct
+}
 
 func sendImageFromURL(url string, s *discordgo.Session, c *discordgo.Channel) {
 	var embed discordgo.MessageEmbed
@@ -24,30 +38,16 @@ func sendImageFromURL(url string, s *discordgo.Session, c *discordgo.Channel) {
 	s.ChannelMessageSendEmbed(c.ID, &embed)
 }
 
-func speedCheck(s *discordgo.Session, m *discordgo.MessageCreate) {
-	channel, err := s.State.Channel(m.ChannelID)
-	if err != nil {
-		return
-	}
-
-	_, err = s.ChannelMessageSend(channel.ID, "Speedcheck!!")
-	if err != nil {
-		return
-	}
-
-	sendImageFromURL(getRandomDorenoCardURL(), s, channel)
-}
-
 func sendCotd(game string, s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	var cotdUrls []string
 	switch game {
 	case vanguardName:
-		cotdUrls = GetVGCotd()
+		cotdUrls = getVGCotd()
 	case wsName:
-		cotdUrls = GetWSCotd()
+		cotdUrls = getWSCotd()
 	case bfName:
-		cotdUrls = GetBFCotd()
+		cotdUrls = getBFCotd()
 	}
 
 	channel, err := s.State.Channel(m.ChannelID)
@@ -72,7 +72,7 @@ func sendDailyRkgk(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	_, err = s.ChannelMessageSend(channel.ID, ":angry:")
-	dailyRkgk := GetDailyRkgk(httpClient)
+	dailyRkgk := getDailyRkgk(httpClient)
 	_, err = s.ChannelMessageSend(channel.ID, dailyRkgk.id)
 	sendImageFromURL(dailyRkgk.mediaURL, s, channel)
 }
@@ -101,11 +101,6 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	if strings.HasPrefix(m.Content, ":speedcheck") {
-		speedCheck(s, m)
-		return
-	}
-
 	if strings.HasPrefix(m.Content, ":dailyrkgk") {
 		sendDailyRkgk(s, m)
 		return
@@ -121,8 +116,7 @@ func statusPoller(statusChannel <-chan string, s *discordgo.Session) {
 	}
 }
 
-// StartDiscordBot will start the discord bot
-func StartDiscordBot(statusChannel <-chan string, client *http.Client) {
+func startDiscordBot(channels discordServiceChannelsStruct, client *http.Client) {
 	token := os.Getenv("TOKEN")
 	weissStatus = "with Schwarz"
 	httpClient = client
@@ -134,7 +128,7 @@ func StartDiscordBot(statusChannel <-chan string, client *http.Client) {
 	discord.AddHandler(ready)
 	discord.AddHandler(messageCreate)
 
-	go statusPoller(statusChannel, discord)
+	go statusPoller(channels.statusChannel, discord)
 
 	err = discord.Open()
 	if err != nil {

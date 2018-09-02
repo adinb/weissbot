@@ -10,8 +10,7 @@ const cotdBFURL = "https://fc-buddyfight.com/todays-card/"
 
 const bfName = "bf"
 
-// GetWSCotd returns array of COTD image URLs
-func GetBFCotd() []string {
+func getBFCotd() []string {
 	return getBFCotdURLFromPage(RetrievePage(cotdBFURL))
 }
 
@@ -24,4 +23,3 @@ func getBFCotdURLFromPage(doc *html.Node) []string {
 
 	return cotdUrls
 }
-

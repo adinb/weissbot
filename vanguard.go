@@ -10,7 +10,7 @@ const cotdVGPageURL = "http://cf-vanguard.com/todays-card/"
 const vanguardName = "vg"
 
 // GetVGCotd returns array of COTD image URLs
-func GetVGCotd() []string {
+func getVGCotd() []string {
 	return getVGCotdURLFromPage(RetrievePage(cotdVGPageURL))
 }
 

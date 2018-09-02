@@ -43,11 +43,11 @@ func sendCotd(game string, s *discordgo.Session, m *discordgo.MessageCreate) {
 	var cotdUrls []string
 	switch game {
 	case vanguardName:
-		cotdUrls = GetVGCotd()
+		cotdUrls = getVGCotd()
 	case wsName:
-		cotdUrls = GetWSCotd()
+		cotdUrls = getWSCotd()
 	case bfName:
-		cotdUrls = GetBFCotd()
+		cotdUrls = getBFCotd()
 	}
 
 	channel, err := s.State.Channel(m.ChannelID)
@@ -72,7 +72,7 @@ func sendDailyRkgk(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	_, err = s.ChannelMessageSend(channel.ID, ":angry:")
-	dailyRkgk := GetDailyRkgk(httpClient)
+	dailyRkgk := getDailyRkgk(httpClient)
 	_, err = s.ChannelMessageSend(channel.ID, dailyRkgk.id)
 	sendImageFromURL(dailyRkgk.mediaURL, s, channel)
 }

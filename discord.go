@@ -2,17 +2,31 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
-	"net/http"
 
 	"github.com/bwmarrin/discordgo"
 )
 
 var weissStatus string
 var httpClient *http.Client
+
+type discordServiceChannelsStruct struct {
+	statusChannel chan string
+}
+
+type discordStatusStruct struct {
+	Status string
+}
+
+func createDiscordServiceChannel() discordServiceChannelsStruct {
+	var chanStruct discordServiceChannelsStruct
+	chanStruct.statusChannel = make(chan string)
+	return chanStruct
+}
 
 func sendImageFromURL(url string, s *discordgo.Session, c *discordgo.Channel) {
 	var embed discordgo.MessageEmbed
@@ -102,8 +116,7 @@ func statusPoller(statusChannel <-chan string, s *discordgo.Session) {
 	}
 }
 
-// StartDiscordBot will start the discord bot
-func StartDiscordBot(statusChannel <-chan string, client *http.Client) {
+func startDiscordBot(channels discordServiceChannelsStruct, client *http.Client) {
 	token := os.Getenv("TOKEN")
 	weissStatus = "with Schwarz"
 	httpClient = client
@@ -115,7 +128,7 @@ func StartDiscordBot(statusChannel <-chan string, client *http.Client) {
 	discord.AddHandler(ready)
 	discord.AddHandler(messageCreate)
 
-	go statusPoller(statusChannel, discord)
+	go statusPoller(channels.statusChannel, discord)
 
 	err = discord.Open()
 	if err != nil {

@@ -12,18 +12,36 @@ type tweetStruct struct {
 	mediaURL string
 }
 
-// GetDailyRkgk will return URL to a rkgk tweet
 func getDailyRkgk(client *http.Client) tweetStruct {
-	bodyJSON, err := searchTweets(client, "%23rkgk")
-
-	var body map[string]interface{}
+	hashtagRkgkBodyJSON, err := searchTweets(client, "%23rkgk")
 	if err != nil {
 		log.Panic(err)
 	}
 
+	rkgkBodyJSON, err := searchTweets(client, "rkgk")
+	if err != nil {
+		log.Panic(err)
+	}
+
+	rkgkJpBodyJSON, err := searchTweets(client, "%e3%82%89%e3%81%8f%e3%81%8c%e3%81%8d")
+	if err != nil {
+		log.Panic(err)
+	}
+
+	var hashtagRkgkBody map[string]interface{}
+	var rkgkBody map[string]interface{}
+	var rkgkJpBody map[string]interface{}
+
 	var keys []tweetStruct
-	json.Unmarshal(bodyJSON, &body)
-	statuses := body["statuses"].([]interface{})
+	json.Unmarshal(hashtagRkgkBodyJSON, &hashtagRkgkBody)
+	json.Unmarshal(rkgkBodyJSON, &rkgkBody)
+	json.Unmarshal(rkgkJpBodyJSON, &rkgkJpBody)
+
+	statuses := make([]interface{}, 0)
+	statuses = append(statuses, hashtagRkgkBody["statuses"].([]interface{})...)
+	statuses = append(statuses, rkgkBody["statuses"].([]interface{})...)
+	statuses = append(statuses, rkgkJpBody["statuses"].([]interface{})...)
+
 	tweets := findTopTweets(statuses)
 	for k := range tweets {
 		keys = append(keys, k)
@@ -34,7 +52,7 @@ func getDailyRkgk(client *http.Client) tweetStruct {
 }
 
 func findTopTweets(statuses []interface{}) map[tweetStruct]bool {
-	const THRESHOLD int = 100
+	const THRESHOLD int = 50
 	tweets := make(map[tweetStruct]bool, 100)
 	for _, status := range statuses {
 		statusMap := status.(map[string]interface{})

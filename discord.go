@@ -24,20 +24,6 @@ func sendImageFromURL(url string, s *discordgo.Session, c *discordgo.Channel) {
 	s.ChannelMessageSendEmbed(c.ID, &embed)
 }
 
-func speedCheck(s *discordgo.Session, m *discordgo.MessageCreate) {
-	channel, err := s.State.Channel(m.ChannelID)
-	if err != nil {
-		return
-	}
-
-	_, err = s.ChannelMessageSend(channel.ID, "Speedcheck!!")
-	if err != nil {
-		return
-	}
-
-	sendImageFromURL(getRandomDorenoCardURL(), s, channel)
-}
-
 func sendCotd(game string, s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	var cotdUrls []string
@@ -98,11 +84,6 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if strings.HasPrefix(m.Content, ":cotd bf") {
 		sendCotd(bfName, s, m)
-		return
-	}
-
-	if strings.HasPrefix(m.Content, ":speedcheck") {
-		speedCheck(s, m)
 		return
 	}
 

@@ -105,6 +105,43 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		sendDailyRkgk(s, m)
 		return
 	}
+
+	if strings.HasPrefix(m.Content, ":weiss-help") {
+		sendHelpMessage(s, m)
+		return
+	}
+}
+
+func sendHelpMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
+	channel, err := s.State.Channel(m.ChannelID)
+	if err != nil {
+		return
+	}
+
+	var embed discordgo.MessageEmbed
+	var footer discordgo.MessageEmbedFooter
+	footer.Text = "Weiss will learn more tricks in the future, stay tuned!"
+
+	embed.Footer = &footer
+
+	fields := make([]*discordgo.MessageEmbedField, 2)
+	fields[0] = new(discordgo.MessageEmbedField)
+	fields[0].Name = "Card of The Day"
+	fields[0].Value = "Weiss can help you get **Vanguard** | **Buddyfight** | **Weiss Schwarz** CoTD by using `:cotd vg` | `:cotd bf` | `:cotd ws` respectively"
+
+	fields[1] = new(discordgo.MessageEmbedField)
+	fields[1].Name = "Daily Rakugaki"
+	fields[1].Value = "Want to get triggered by `#rkgk`? Weiss can help you with that. Type `:dailyrgk` and prepare your :angry: react"
+
+	embed.Color = 0xea195f
+	embed.Title = "Need help?"
+	embed.Description = "Here's what Weiss can help you with:"
+	embed.Fields = fields
+
+	s.ChannelMessageSendEmbed(channel.ID, &embed)
+	if err != nil {
+		return
+	}
 }
 
 func statusPoller(statusChannel <-chan string, s *discordgo.Session) {
@@ -118,7 +155,7 @@ func statusPoller(statusChannel <-chan string, s *discordgo.Session) {
 
 func startDiscordBot(channels discordServiceChannelsStruct, client *http.Client) {
 	token := os.Getenv("TOKEN")
-	weissStatus = "with Schwarz"
+	weissStatus = "with Schwarz | :weiss-help"
 	httpClient = client
 	discord, err := discordgo.New("Bot " + token)
 	if err != nil {

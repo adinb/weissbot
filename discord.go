@@ -11,7 +11,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var weissStatus string
+const defaultWeissStatus = "with Schwarz | :weiss-help"
+
 var httpClient *http.Client
 
 type discordServiceChannelsStruct struct {
@@ -20,6 +21,32 @@ type discordServiceChannelsStruct struct {
 
 type discordStatusStruct struct {
 	Status string
+}
+
+func startDiscordBot(channels discordServiceChannelsStruct, client *http.Client) {
+	token := os.Getenv("TOKEN")
+	httpClient = client
+
+	discord, err := discordgo.New("Bot " + token)
+	if err != nil {
+		panic(err)
+	}
+
+	discord.AddHandler(ready)
+	discord.AddHandler(messageCreate)
+
+	go statusPoller(channels.statusChannel, discord)
+
+	err = discord.Open()
+	if err != nil {
+		panic(err)
+	}
+
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	<-sc
+
+	discord.Close()
 }
 
 func createDiscordServiceChannel() discordServiceChannelsStruct {
@@ -78,7 +105,7 @@ func sendDailyRkgk(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func ready(s *discordgo.Session, event *discordgo.Event) {
-	s.UpdateStatus(0, weissStatus)
+	s.UpdateStatus(0, defaultWeissStatus)
 }
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -148,35 +175,6 @@ func sendHelpMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 func statusPoller(statusChannel <-chan string, s *discordgo.Session) {
 	for status := range statusChannel {
-		if weissStatus != status {
-			weissStatus = status
-			s.UpdateStatus(0, weissStatus)
-		}
+		s.UpdateStatus(0, status)
 	}
-}
-
-func startDiscordBot(channels discordServiceChannelsStruct, client *http.Client) {
-	token := os.Getenv("TOKEN")
-	weissStatus = "with Schwarz | :weiss-help"
-	httpClient = client
-	discord, err := discordgo.New("Bot " + token)
-	if err != nil {
-		panic(err)
-	}
-
-	discord.AddHandler(ready)
-	discord.AddHandler(messageCreate)
-
-	go statusPoller(channels.statusChannel, discord)
-
-	err = discord.Open()
-	if err != nil {
-		panic(err)
-	}
-
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
-	<-sc
-
-	discord.Close()
 }

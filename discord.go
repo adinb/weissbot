@@ -7,11 +7,14 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"weissbot/rakugaki"
+	"weissbot/twitter"
 
 	"github.com/bwmarrin/discordgo"
 )
 
-var weissStatus string
+const defaultWeissStatus = "with Schwarz | :weiss-help"
+
 var httpClient *http.Client
 
 type discordServiceChannelsStruct struct {
@@ -20,6 +23,32 @@ type discordServiceChannelsStruct struct {
 
 type discordStatusStruct struct {
 	Status string
+}
+
+func startDiscordBot(channels discordServiceChannelsStruct, client *http.Client) {
+	token := os.Getenv("TOKEN")
+	httpClient = client
+
+	discord, err := discordgo.New("Bot " + token)
+	if err != nil {
+		panic(err)
+	}
+
+	discord.AddHandler(ready)
+	discord.AddHandler(messageCreate)
+
+	go statusPoller(channels.statusChannel, discord)
+
+	err = discord.Open()
+	if err != nil {
+		panic(err)
+	}
+
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	<-sc
+
+	discord.Close()
 }
 
 func createDiscordServiceChannel() discordServiceChannelsStruct {
@@ -65,20 +94,32 @@ func sendCotd(game string, s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-func sendDailyRkgk(s *discordgo.Session, m *discordgo.MessageCreate) {
+func sendDailyRkgk(s *discordgo.Session, m *discordgo.MessageCreate) error {
 	channel, err := s.State.Channel(m.ChannelID)
 	if err != nil {
-		return
+		return err
 	}
 
 	_, err = s.ChannelMessageSend(channel.ID, ":angry:")
-	dailyRkgk := getDailyRkgk(httpClient)
-	_, err = s.ChannelMessageSend(channel.ID, dailyRkgk.id)
-	sendImageFromURL(dailyRkgk.mediaURL, s, channel)
+	if err != nil {
+		return err
+	}
+
+	dailyRkgk, err := rakugaki.GetRakugaki(twitter.SearchTweets)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	tweetURL := fmt.Sprintf("https://www.twitter.com/%s/status/%s", dailyRkgk.UserScreenName, dailyRkgk.IDStr)
+	_, err = s.ChannelMessageSend(channel.ID, tweetURL)
+	sendImageFromURL(dailyRkgk.MediaUrls[0], s, channel)
+
+	return nil
 }
 
 func ready(s *discordgo.Session, event *discordgo.Event) {
-	s.UpdateStatus(0, weissStatus)
+	s.UpdateStatus(0, defaultWeissStatus)
 }
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -118,25 +159,27 @@ func sendHelpMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	var embed discordgo.MessageEmbed
+	fields := make([]*discordgo.MessageEmbedField, 0)
+
+	cardOfTheDayField := new(discordgo.MessageEmbedField)
+	cardOfTheDayField.Name = "Card of The Day"
+	cardOfTheDayField.Value = "Weiss can help you get **Vanguard** | **Buddyfight** | **Weiss Schwarz** CoTD by using `:cotd vg` | `:cotd bf` | `:cotd ws` respectively"
+
+	dailyRkgkField := new(discordgo.MessageEmbedField)
+	dailyRkgkField.Name = "Daily Rakugaki"
+	dailyRkgkField.Value = "Want to get triggered by `#rkgk`? Weiss can help you with that. Type `:dailyrgk` and prepare your :angry: react"
+
+	fields = append(fields, cardOfTheDayField, dailyRkgkField)
+
 	var footer discordgo.MessageEmbedFooter
 	footer.Text = "Weiss will learn more tricks in the future, stay tuned!"
 
-	embed.Footer = &footer
-
-	fields := make([]*discordgo.MessageEmbedField, 2)
-	fields[0] = new(discordgo.MessageEmbedField)
-	fields[0].Name = "Card of The Day"
-	fields[0].Value = "Weiss can help you get **Vanguard** | **Buddyfight** | **Weiss Schwarz** CoTD by using `:cotd vg` | `:cotd bf` | `:cotd ws` respectively"
-
-	fields[1] = new(discordgo.MessageEmbedField)
-	fields[1].Name = "Daily Rakugaki"
-	fields[1].Value = "Want to get triggered by `#rkgk`? Weiss can help you with that. Type `:dailyrgk` and prepare your :angry: react"
-
+	var embed discordgo.MessageEmbed
 	embed.Color = 0xea195f
 	embed.Title = "Need help?"
 	embed.Description = "Here's what Weiss can help you with:"
 	embed.Fields = fields
+	embed.Footer = &footer
 
 	s.ChannelMessageSendEmbed(channel.ID, &embed)
 	if err != nil {
@@ -146,35 +189,6 @@ func sendHelpMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 func statusPoller(statusChannel <-chan string, s *discordgo.Session) {
 	for status := range statusChannel {
-		if weissStatus != status {
-			weissStatus = status
-			s.UpdateStatus(0, weissStatus)
-		}
+		s.UpdateStatus(0, status)
 	}
-}
-
-func startDiscordBot(channels discordServiceChannelsStruct, client *http.Client) {
-	token := os.Getenv("TOKEN")
-	weissStatus = "with Schwarz | :weiss-help"
-	httpClient = client
-	discord, err := discordgo.New("Bot " + token)
-	if err != nil {
-		panic(err)
-	}
-
-	discord.AddHandler(ready)
-	discord.AddHandler(messageCreate)
-
-	go statusPoller(channels.statusChannel, discord)
-
-	err = discord.Open()
-	if err != nil {
-		panic(err)
-	}
-
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
-	<-sc
-
-	discord.Close()
 }

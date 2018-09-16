@@ -21,6 +21,30 @@
 			"revisionTime": "2018-02-01T00:25:41Z"
 		},
 		{
+			"checksumSHA1": "TAXd73uN0hLjwdGGGNgnmF6iC0k=",
+			"path": "github.com/google/go-cmp/cmp",
+			"revision": "875f8df8b7965f1eac1098d36d677f807ac0b49e",
+			"revisionTime": "2018-09-11T19:48:14Z"
+		},
+		{
+			"checksumSHA1": "oLBV7th4sxzxzmf1b91NVVbdOfI=",
+			"path": "github.com/google/go-cmp/cmp/internal/diff",
+			"revision": "875f8df8b7965f1eac1098d36d677f807ac0b49e",
+			"revisionTime": "2018-09-11T19:48:14Z"
+		},
+		{
+			"checksumSHA1": "kYtvRhMjM0X4bvEjR3pqEHLw1qo=",
+			"path": "github.com/google/go-cmp/cmp/internal/function",
+			"revision": "875f8df8b7965f1eac1098d36d677f807ac0b49e",
+			"revisionTime": "2018-09-11T19:48:14Z"
+		},
+		{
+			"checksumSHA1": "OQQ56f38ikfmG2Zd3lUlk4LUBIw=",
+			"path": "github.com/google/go-cmp/cmp/internal/value",
+			"revision": "875f8df8b7965f1eac1098d36d677f807ac0b49e",
+			"revisionTime": "2018-09-11T19:48:14Z"
+		},
+		{
 			"checksumSHA1": "tvVmLXS0w9aMKlZkVyiECxtbZXI=",
 			"path": "github.com/gorilla/websocket",
 			"revision": "eb925808374e5ca90c83401a40d711dc08c0c0f6",

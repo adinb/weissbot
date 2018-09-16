@@ -118,25 +118,27 @@ func sendHelpMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	var embed discordgo.MessageEmbed
+	fields := make([]*discordgo.MessageEmbedField, 0)
+
+	cardOfTheDayField := new(discordgo.MessageEmbedField)
+	cardOfTheDayField.Name = "Card of The Day"
+	cardOfTheDayField.Value = "Weiss can help you get **Vanguard** | **Buddyfight** | **Weiss Schwarz** CoTD by using `:cotd vg` | `:cotd bf` | `:cotd ws` respectively"
+
+	dailyRkgkField := new(discordgo.MessageEmbedField)
+	dailyRkgkField.Name = "Daily Rakugaki"
+	dailyRkgkField.Value = "Want to get triggered by `#rkgk`? Weiss can help you with that. Type `:dailyrgk` and prepare your :angry: react"
+
+	fields = append(fields, cardOfTheDayField, dailyRkgkField)
+
 	var footer discordgo.MessageEmbedFooter
 	footer.Text = "Weiss will learn more tricks in the future, stay tuned!"
 
-	embed.Footer = &footer
-
-	fields := make([]*discordgo.MessageEmbedField, 2)
-	fields[0] = new(discordgo.MessageEmbedField)
-	fields[0].Name = "Card of The Day"
-	fields[0].Value = "Weiss can help you get **Vanguard** | **Buddyfight** | **Weiss Schwarz** CoTD by using `:cotd vg` | `:cotd bf` | `:cotd ws` respectively"
-
-	fields[1] = new(discordgo.MessageEmbedField)
-	fields[1].Name = "Daily Rakugaki"
-	fields[1].Value = "Want to get triggered by `#rkgk`? Weiss can help you with that. Type `:dailyrgk` and prepare your :angry: react"
-
+	var embed discordgo.MessageEmbed
 	embed.Color = 0xea195f
 	embed.Title = "Need help?"
 	embed.Description = "Here's what Weiss can help you with:"
 	embed.Fields = fields
+	embed.Footer = &footer
 
 	s.ChannelMessageSendEmbed(channel.ID, &embed)
 	if err != nil {

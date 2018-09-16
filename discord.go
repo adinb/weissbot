@@ -7,6 +7,8 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"weissbot/rakugaki"
+	"weissbot/twitter"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -92,16 +94,28 @@ func sendCotd(game string, s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-func sendDailyRkgk(s *discordgo.Session, m *discordgo.MessageCreate) {
+func sendDailyRkgk(s *discordgo.Session, m *discordgo.MessageCreate) error {
 	channel, err := s.State.Channel(m.ChannelID)
 	if err != nil {
-		return
+		return err
 	}
 
 	_, err = s.ChannelMessageSend(channel.ID, ":angry:")
-	dailyRkgk := getDailyRkgk(httpClient)
-	_, err = s.ChannelMessageSend(channel.ID, dailyRkgk.id)
-	sendImageFromURL(dailyRkgk.mediaURL, s, channel)
+	if err != nil {
+		return err
+	}
+
+	dailyRkgk, err := rakugaki.GetRakugaki(twitter.SearchTweets)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	tweetURL := fmt.Sprintf("https://www.twitter.com/%s/status/%s", dailyRkgk.UserScreenName, dailyRkgk.IDStr)
+	_, err = s.ChannelMessageSend(channel.ID, tweetURL)
+	sendImageFromURL(dailyRkgk.MediaUrls[0], s, channel)
+
+	return nil
 }
 
 func ready(s *discordgo.Session, event *discordgo.Event) {

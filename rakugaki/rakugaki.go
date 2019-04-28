@@ -2,7 +2,8 @@ package rakugaki
 
 import (
 	"math/rand"
-	"weissbot/twitter"
+
+	"github.com/adinb/weissbot/twitter"
 )
 
 // GetRakugaki returns a random tweet that contains either #rkgk, rkgk, or らくがき with more than 100 favorites

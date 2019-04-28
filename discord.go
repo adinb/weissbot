@@ -7,8 +7,9 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
-	"weissbot/rakugaki"
-	"weissbot/twitter"
+
+	"github.com/adinb/weissbot/rakugaki"
+	"github.com/adinb/weissbot/twitter"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -94,6 +95,76 @@ func sendCotd(game string, s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
+func sendMTGSearchResult(s *discordgo.Session, m *discordgo.MessageCreate) error {
+	channel, err := s.State.Channel(m.ChannelID)
+	if err != nil {
+		return err
+	}
+
+	name := []byte(m.Content)[12:]
+	cards, err := SearchMagicCard(string(name))
+
+	var verb string
+	if len(cards) == 1 {
+		verb = "card"
+	} else {
+		verb = "cards"
+	}
+
+	s.ChannelMessageSend(channel.ID, fmt.Sprintf("I found **%d** %s with **%s** in its name", len(cards), verb, name))
+
+	for _, card := range cards {
+		image := new(discordgo.MessageEmbedImage)
+		image.URL = card.Faces[0].ImageURIs.PNG
+
+		var embed discordgo.MessageEmbed
+
+		embed.Color = 0xea195f
+		embed.Title = card.Name
+		embed.Image = image
+		embed.URL = card.ScryfallURI
+
+		for _, face := range card.Faces {
+			if face.Power != "" {
+				embed.Description += fmt.Sprintf(
+					"%s\n%s\n\n**%s**\n%s\n**%s/%s**\n**Artist:** %s\n*%s*\n",
+					face.ManaCost,
+					strings.Join(face.Colors, ", "),
+					face.TypeLine,
+					face.Text,
+					face.Power,
+					face.Toughness,
+					face.Artist,
+					face.FlavorText)
+			} else {
+				embed.Description += fmt.Sprintf(
+					"%s\n%s\n\n**%s**\n%s\n**Artist:** %s\n*%s*\n",
+					face.ManaCost,
+					strings.Join(face.Colors, ", "),
+					face.TypeLine,
+					face.Text,
+					face.Artist,
+					face.FlavorText)
+			}
+		}
+
+		embed.Description += fmt.Sprintf(
+			"\n**Format:** %s\n**Rarity:** %s\n**Set:** %s\n**Release date:** %s\n",
+			strings.Join(card.Legalities, ", "),
+			card.Rarity,
+			card.SetName,
+			card.ReleaseDate)
+
+		s.ChannelMessageSendEmbed(channel.ID, &embed)
+		if err != nil {
+			fmt.Println(err.Error())
+			return err
+		}
+	}
+
+	return nil
+}
+
 func sendDailyRkgk(s *discordgo.Session, m *discordgo.MessageCreate) error {
 	channel, err := s.State.Channel(m.ChannelID)
 	if err != nil {
@@ -151,6 +222,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		sendHelpMessage(s, m)
 		return
 	}
+
+	if strings.HasPrefix(m.Content, ":mtg-search") {
+		sendMTGSearchResult(s, m)
+	}
 }
 
 func sendHelpMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -169,7 +244,11 @@ func sendHelpMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 	dailyRkgkField.Name = "Daily Rakugaki"
 	dailyRkgkField.Value = "Want to get triggered by `#rkgk`? Weiss can help you with that. Type `:dailyrgk` and prepare your :angry: react"
 
-	fields = append(fields, cardOfTheDayField, dailyRkgkField)
+	MTGSearchField := new(discordgo.MessageEmbedField)
+	MTGSearchField.Name = "MTG Card Search"
+	MTGSearchField.Value = "You're having MTG chat with your friends and need to do a quick card search? Try typing `:mtg-search <card name>`"
+
+	fields = append(fields, cardOfTheDayField, dailyRkgkField, MTGSearchField)
 
 	var footer discordgo.MessageEmbedFooter
 	footer.Text = "Weiss will learn more tricks in the future, stay tuned!"

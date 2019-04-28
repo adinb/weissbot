@@ -2,7 +2,8 @@ package rakugaki
 
 import (
 	"testing"
-	"weissbot/twitter"
+
+	"github.com/adinb/weissbot/twitter"
 )
 
 func mockTweetSearch(query string) ([]twitter.Tweet, error) {

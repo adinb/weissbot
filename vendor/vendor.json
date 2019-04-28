@@ -3,6 +3,24 @@
 	"ignore": "test",
 	"package": [
 		{
+			"checksumSHA1": "auakFFYqdhKXzSCsTtRiJU2qENI=",
+			"path": "github.com/adinb/weissbot",
+			"revision": "2c1bb10e5f46324bcac3f95f08199d62511f36e2",
+			"revisionTime": "2019-04-28T16:25:14Z"
+		},
+		{
+			"checksumSHA1": "53BPiQDePjjYBJ62CoO1dX8Mmbg=",
+			"path": "github.com/adinb/weissbot/rakugaki",
+			"revision": "2c1bb10e5f46324bcac3f95f08199d62511f36e2",
+			"revisionTime": "2019-04-28T16:25:14Z"
+		},
+		{
+			"checksumSHA1": "RNdyBzYpo+RgC3v7ucuegGER2O0=",
+			"path": "github.com/adinb/weissbot/twitter",
+			"revision": "2c1bb10e5f46324bcac3f95f08199d62511f36e2",
+			"revisionTime": "2019-04-28T16:25:14Z"
+		},
+		{
 			"checksumSHA1": "4Z4pIUfcMLu5ltZNRU/j8AH2lzc=",
 			"path": "github.com/antchfx/htmlquery",
 			"revision": "9f7717ac9bac5f660391c57e3d496b3c7cf9741f",
@@ -189,5 +207,5 @@
 			"revisionTime": "2018-03-01T21:29:26Z"
 		}
 	],
-	"rootPath": "weissbot"
+	"rootPath": "github.com/adinb/weissbot"
 }

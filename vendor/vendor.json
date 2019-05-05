@@ -39,12 +39,6 @@
 			"revisionTime": "2018-02-01T00:25:41Z"
 		},
 		{
-			"checksumSHA1": "AjyuV7g0iMeUQKygjDQH6+Gq2Z8=",
-			"path": "github.com/disintegration/imaging",
-			"revision": "061e8a750a4db9667cdf9e2af7f4029ba506cb3b",
-			"revisionTime": "2019-03-08T17:29:37Z"
-		},
-		{
 			"checksumSHA1": "vXyQvAMUVMw48v1LmK9TQevMrRs=",
 			"path": "github.com/fogleman/gg",
 			"revision": "72436a171bf31757dc87fb8fa9f7485307350307",

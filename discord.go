@@ -101,7 +101,8 @@ func sendMTGSearchResult(s *discordgo.Session, m *discordgo.MessageCreate) error
 		return err
 	}
 
-	name := []byte(m.Content)[12:]
+	index := strings.Index(m.Content, " ")
+	name := []byte(m.Content)[index+1:]
 	cards, err := SearchMagicCard(string(name))
 
 	var verb string
@@ -114,10 +115,27 @@ func sendMTGSearchResult(s *discordgo.Session, m *discordgo.MessageCreate) error
 	s.ChannelMessageSend(channel.ID, fmt.Sprintf("I found **%d** %s with **%s** in its name", len(cards), verb, name))
 
 	for _, card := range cards {
-		image := new(discordgo.MessageEmbedImage)
-		image.URL = card.Faces[0].ImageURIs.PNG
-
+		var imageURL string
 		var embed discordgo.MessageEmbed
+		var complex discordgo.MessageSend
+
+		if len(card.Faces) == 2 {
+			file, err := GenerateCombinedTwoFaceCardImage(card)
+			if err != nil {
+				return err
+			}
+
+			var imgFile discordgo.File
+			imgFile.Name = card.ID + ".jpg"
+			imgFile.Reader = file
+			complex.Files = append(complex.Files, &imgFile)
+			imageURL = "attachment://" + card.ID + ".jpg"
+		} else {
+			imageURL = card.Faces[0].ImageURIs.PNG
+		}
+
+		image := new(discordgo.MessageEmbedImage)
+		image.URL = imageURL
 
 		embed.Color = 0xea195f
 		embed.Title = card.Name
@@ -155,7 +173,10 @@ func sendMTGSearchResult(s *discordgo.Session, m *discordgo.MessageCreate) error
 			card.SetName,
 			card.ReleaseDate)
 
-		s.ChannelMessageSendEmbed(channel.ID, &embed)
+		complex.Embed = &embed
+		complex.Tts = false
+
+		s.ChannelMessageSendComplex(channel.ID, &complex)
 		if err != nil {
 			fmt.Println(err.Error())
 			return err
@@ -194,37 +215,45 @@ func ready(s *discordgo.Session, event *discordgo.Event) {
 }
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
+	prefix := ""
+	if os.Getenv("ENV") != "production" {
+		prefix = ":test"
+	}
+
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
 
-	if strings.HasPrefix(m.Content, ":cotd vg") {
+	if strings.HasPrefix(m.Content, prefix+":cotd vg") {
 		sendCotd(vanguardName, s, m)
 		return
 	}
 
-	if strings.HasPrefix(m.Content, ":cotd ws") {
+	if strings.HasPrefix(m.Content, prefix+":cotd ws") {
 		sendCotd(wsName, s, m)
 		return
 	}
 
-	if strings.HasPrefix(m.Content, ":cotd bf") {
+	if strings.HasPrefix(m.Content, prefix+":cotd bf") {
 		sendCotd(bfName, s, m)
 		return
 	}
 
-	if strings.HasPrefix(m.Content, ":dailyrkgk") {
+	if strings.HasPrefix(m.Content, prefix+":dailyrkgk") {
 		sendDailyRkgk(s, m)
 		return
 	}
 
-	if strings.HasPrefix(m.Content, ":weiss-help") {
+	if strings.HasPrefix(m.Content, prefix+":weiss-help") {
 		sendHelpMessage(s, m)
 		return
 	}
 
-	if strings.HasPrefix(m.Content, ":mtg-search") {
-		sendMTGSearchResult(s, m)
+	if strings.HasPrefix(m.Content, prefix+":mtg-search") {
+		err := sendMTGSearchResult(s, m)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
 	}
 }
 

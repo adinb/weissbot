@@ -64,7 +64,6 @@ func sendImageFromURL(url string, s *discordgo.Session, c *discordgo.Channel) {
 
 	embedImage.URL = url
 	embed.Image = &embedImage
-	fmt.Println(embed.URL)
 	s.ChannelMessageSendEmbed(c.ID, &embed)
 }
 
@@ -210,6 +209,26 @@ func sendDailyRkgk(s *discordgo.Session, m *discordgo.MessageCreate) error {
 	return nil
 }
 
+func sendDailySakuga(s *discordgo.Session, m *discordgo.MessageCreate) error {
+	channel, err := s.State.Channel(m.ChannelID)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.ChannelMessageSend(channel.ID, ":open_mouth:")
+	if err != nil {
+		return err
+	}
+
+	dailySakugaURL := GetSakuga()
+	_, err = s.ChannelMessageSend(channel.ID, dailySakugaURL)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func ready(s *discordgo.Session, event *discordgo.Event) {
 	s.UpdateStatus(0, defaultWeissStatus)
 }
@@ -249,6 +268,11 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
+	if strings.HasPrefix(m.Content, prefix+":dailysakuga") {
+		sendDailySakuga(s, m)
+		return
+	}
+
 	if strings.HasPrefix(m.Content, prefix+":mtg-search") {
 		err := sendMTGSearchResult(s, m)
 		if err != nil {
@@ -277,7 +301,11 @@ func sendHelpMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 	MTGSearchField.Name = "MTG Card Search"
 	MTGSearchField.Value = "You're having MTG chat with your friends and need to do a quick card search? Try typing `:mtg-search <card name>`"
 
-	fields = append(fields, cardOfTheDayField, dailyRkgkField, MTGSearchField)
+	DailySakugaField := new(discordgo.MessageEmbedField)
+	DailySakugaField.Name = "Daily Sakuga"
+	DailySakugaField.Value = "Everyone loves sakuga. Enjoy random sakuga by typing `:dailysakuga`"
+
+	fields = append(fields, cardOfTheDayField, dailyRkgkField, MTGSearchField, DailySakugaField)
 
 	var footer discordgo.MessageEmbedFooter
 	footer.Text = "Weiss will learn more tricks in the future, stay tuned!"

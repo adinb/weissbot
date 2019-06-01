@@ -1,5 +1,10 @@
 {
 	"comment": "",
+	"heroku": {
+		"install": [
+			"./cmd/..."
+		]
+	},
 	"ignore": "test",
 	"package": [
 		{
@@ -21,10 +26,22 @@
 			"revisionTime": "2018-02-01T00:25:41Z"
 		},
 		{
+			"checksumSHA1": "vXyQvAMUVMw48v1LmK9TQevMrRs=",
+			"path": "github.com/fogleman/gg",
+			"revision": "72436a171bf31757dc87fb8fa9f7485307350307",
+			"revisionTime": "2019-04-17T01:30:52Z"
+		},
+		{
 			"checksumSHA1": "tvVmLXS0w9aMKlZkVyiECxtbZXI=",
 			"path": "github.com/gorilla/websocket",
 			"revision": "eb925808374e5ca90c83401a40d711dc08c0c0f6",
 			"revisionTime": "2018-03-06T18:15:48Z"
+		},
+		{
+			"checksumSHA1": "TsYJAg5Rcy8Oq2YowemRNU3ce2g=",
+			"path": "github.com/joho/godotenv",
+			"revision": "5c0e6c6ab1a0a9ef0a8822cba3a05d62f7dad941",
+			"revisionTime": "2019-02-04T04:41:09Z"
 		},
 		{
 			"checksumSHA1": "TwxAhBcGuCzWA6H3FvJE1XVZsxo=",

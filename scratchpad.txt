@@ -1,0 +1,188 @@
+
+	http.HandleFunc("/dashboard", handleDashboard)
+	http.HandleFunc("/static", handleStaticAssets)
+
+	package main
+
+import (
+	"html/template"
+	"net/http"
+)
+
+type dashboardData struct {
+	VGCotdUrls []string
+	BFCotdUrls []string
+	WSCotdUrls []string
+}
+
+func handleDashboard(w http.ResponseWriter, r *http.Request) {
+	status := dashboardData{getVGCotd(), getBFCotd(), getWSCotd()}
+	template, err := template.New("dashboard.html").ParseFiles("templates/dashboard.html")
+	if err != nil {
+		panic(err)
+	}
+	err = template.Execute(w, status)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func handleStaticAssets(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "./static")
+}
+
+	go startDiscordBot(discordServiceChannels, &http.Client{Timeout: time.Second * 10})
+
+package main
+
+import (
+	"github.com/antchfx/htmlquery"
+	"golang.org/x/net/html"
+)
+
+const baseVGURL = "https://cf-vanguard.com"
+const cotdVGPageURL = "https://cf-vanguard.com/todays-card/"
+const vanguardName = "vg"
+
+// GetVGCotd returns array of COTD image URLs
+func getVGCotd() []string {
+	return getVGCotdURLFromPage(RetrievePage(cotdVGPageURL))
+}
+
+func getVGCotdURLFromPage(doc *html.Node) []string {
+	cotdUrls := make([]string, 0)
+
+	for _, data := range htmlquery.Find(doc, "//p[contains(@class, 'text-center')]/img[contains(@class, 'alignnone')]") {
+		cotdUrls = append(cotdUrls, htmlquery.SelectAttr(data, "src"))
+	}
+
+	return cotdUrls
+}
+
+"https://cf-vanguard.com/todays-card/"
+"https://fc-buddyfight.com/todays-card/"
+"https://ws-tcg.com/todays-card/"
+
+func NewVanguardWebRepository(url string, client *http.Client) webCOTDRepository {
+	var r cotdRepository
+	r.client = client
+	r.url = url
+	r.path = "//p[contains(@class, 'text-center')]/img[contains(@class, 'alignnone')]"
+	return r
+}
+
+func NewBuddyfightWebRepository(url string, client *http.Client) webCOTDRepository {
+	var r cotdRepository
+	r.client = client
+	r.url = url
+	r.path = "//div[contains(@class, 'lp_bg')]/div/div/img"
+	return r
+}
+
+func NewWSWebRepository(url string, client *http.Client) webCOTDRepository {
+	var r cotdRepository
+	r.client = client
+	r.baseURL = "https://ws-tcg.com"
+	r.url = url
+	r.path = "//div[contains(@class, 'entry-content')]/p/img"
+	return r
+}
+
+https://api.twitter.com/1.1/search/tweets.json?q=
+
+package twitter
+
+import (
+	"encoding/json"
+	"testing"
+
+	"github.com/google/go-cmp/cmp"
+)
+
+func TestFindTopTweets(t *testing.T) {
+	var tweets []Tweet
+	expectedTweets := []Tweet{{FavoriteCount: 120}, {FavoriteCount: 400}}
+	const favoriteThreshold = 100
+
+	tweets = append(tweets, Tweet{FavoriteCount: 10})
+	tweets = append(tweets, Tweet{FavoriteCount: 120})
+	tweets = append(tweets, Tweet{FavoriteCount: 400})
+
+	topTweets := FindTopTweets(favoriteThreshold, tweets)
+	if !cmp.Equal(expectedTweets, topTweets) {
+		t.Error("Top tweets list doesn't match expectation", cmp.Diff(expectedTweets, topTweets))
+	}
+}
+
+func TestMakeTweetFromMap(t *testing.T) {
+	const tweetJSONString = `
+	{
+		"id_str": "1041045876280504320",
+		"text": "RT @H_cho3: 사요히나 낙서 rkgk\nさよひな https://t.co/1H8uRMU0l4",
+		"extended_entities": {
+			"media": [{
+				"id": 1040913570265853952,
+				"id_str": "1040913570265853952",
+				"media_url_https": "https://pbs.twimg.com/media/DnIRYI2UcAADxts.jpg",
+				"url": "https://t.co/1H8uRMU0l4",
+				"display_url": "pic.twitter.com/1H8uRMU0l4",
+				"expanded_url": "https://twitter.com/H_cho3/status/1040914206751522816/photo/1",
+				"type": "photo"
+			}]
+		},
+		"user": {
+			"id_str": "825482847280455680",
+			"name": "토퍼",
+			"screen_name": "Thanks664"
+		},
+		"retweeted_status": {
+			"created_at": "Sat Sep 15 10:44:20 +0000 2018",
+			"id_str": "1040914206751522816",
+			"text": "사요히나 낙서 rkgk\nさよひな https://t.co/1H8uRMU0l4",
+			"extended_entities": {
+				"media": [{
+					"id": 1040913570265853952,
+					"id_str": "1040913570265853952",
+					"media_url_https": "https://pbs.twimg.com/media/DnIRYI2UcAADxts.jpg",
+					"url": "https://t.co/1H8uRMU0l4",
+					"display_url": "pic.twitter.com/1H8uRMU0l4",
+					"expanded_url": "https://twitter.com/H_cho3/status/1040914206751522816/photo/1",
+					"type": "photo"
+				}]
+			},
+			"user": {
+				"id": 2920809560,
+				"id_str": "2920809560",
+				"name": "初3",
+				"screen_name": "H_cho3"
+			},
+			"retweet_count": 265,
+			"favorite_count": 765
+		},
+		"retweet_count": 265,
+		"favorite_count": 0
+	}
+	`
+
+	var tweetDataMap map[string](interface{})
+	expectedRetweetedTweet := Tweet{
+		IDStr:          "1040914206751522816",
+		Text:           "사요히나 낙서 rkgk\nさよひな https://t.co/1H8uRMU0l4",
+		RetweetCount:   265,
+		FavoriteCount:  765,
+		UserName:       "初3",
+		UserScreenName: "H_cho3",
+		MediaUrls:      []string{"https://pbs.twimg.com/media/DnIRYI2UcAADxts.jpg"}}
+
+	err := json.Unmarshal([]byte(tweetJSONString), &tweetDataMap)
+	if err != nil {
+		t.Error("Something wrong happened", err)
+	}
+
+	tweetData := makeTweetFromMap(tweetDataMap)
+
+	if !cmp.Equal(tweetData, expectedRetweetedTweet) {
+		t.Error("Tweet struct isn't properly created\n", cmp.Diff(tweetData, expectedRetweetedTweet))
+	}
+}
+

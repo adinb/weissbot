@@ -2,12 +2,11 @@ package mtg
 
 import (
 	"image"
+	"image/draw"
 	"image/jpeg"
 	"image/png"
 	"io"
 	"net/http"
-
-	"github.com/fogleman/gg"
 )
 
 type DefaultService struct {
@@ -23,24 +22,36 @@ func (s *DefaultService) SearchCardByName(name string) ([]*MagicCard, error) {
 	return cards, nil
 }
 
-func CombineImage(imgA image.Image, imgB image.Image) io.Reader {
-	w := imgA.Bounds().Size().X * 2
-	h := imgA.Bounds().Size().Y
-	dc := gg.NewContext(w, h)
+func TileImagesHorizontally(imgA image.Image, imgB image.Image) image.Image {
+	w := imgA.Bounds().Size().X + imgB.Bounds().Size().X
+	h := 0
+	if imgA.Bounds().Size().Y >= imgB.Bounds().Size().Y {
+		h = imgA.Bounds().Size().Y
+	} else {
+		h = imgB.Bounds().Size().Y
+	}
 
-	dc.DrawImage(imgA, 0, 0)
-	dc.DrawImage(imgB, imgA.Bounds().Size().X, 0)
+	tiledImage := image.NewRGBA(image.Rect(0, 0, w, h))
+	rectA := image.Rect(0, 0, imgA.Bounds().Size().X, imgA.Bounds().Size().Y)
+	rectB := image.Rect(imgA.Bounds().Size().X, 0, w, h)
 
+	draw.Draw(tiledImage, rectA, imgA, image.Pt(0, 0), draw.Over)
+	draw.Draw(tiledImage, rectB, imgB, image.Pt(0, 0), draw.Over)
+
+	return tiledImage
+}
+
+func CreateImageReader(img image.Image) io.Reader {
 	reader, writer := io.Pipe()
 	go func() {
-		jpeg.Encode(writer, dc.Image(), &jpeg.Options{Quality: 80})
+		jpeg.Encode(writer, img, &jpeg.Options{Quality: 80})
 		writer.Close()
 	}()
 
 	return reader
 }
 
-func RetrievePNG(url string) (image.Image, error){
+func RetrievePNG(url string) (image.Image, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err

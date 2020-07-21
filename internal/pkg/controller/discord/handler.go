@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/adinb/weissbot/internal/pkg/cotd"
 	"github.com/adinb/weissbot/internal/pkg/mtg"
 	"github.com/adinb/weissbot/internal/pkg/rakugaki"
 	"github.com/adinb/weissbot/internal/pkg/sakuga"
-	"github.com/adinb/weissbot/internal/pkg/cotd"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -235,11 +235,12 @@ func sendMTGSearchResult(cards []*mtg.MagicCard, s *discordgo.Session, m *discor
 				return err
 			}
 
-			combinedImageReader := mtg.CombineImage(imgA, imgB)
+			tiledImage := mtg.TileImagesHorizontally(imgA, imgB)
+			tiledImageReader := mtg.CreateImageReader(tiledImage)
 
 			var imgFile discordgo.File
 			imgFile.Name = card.ID + ".jpg"
-			imgFile.Reader = combinedImageReader
+			imgFile.Reader = tiledImageReader
 			complex.Files = append(complex.Files, &imgFile)
 			imageURL = "attachment://" + card.ID + ".jpg"
 		} else {

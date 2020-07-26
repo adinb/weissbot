@@ -25,7 +25,10 @@ func main() {
 		}
 
 		for _, event := range events {
-			log.Println(event.Message)
+			if event.Type == linebot.EventTypeMessage {
+				message := (event.Message).(*linebot.TextMessage)
+				log.Println(message.Text)
+			}
 		}
 	})
 

@@ -21,7 +21,7 @@ func main() {
 	mux.HandleFunc("/line", func(w http.ResponseWriter, r *http.Request) {
 		events, err := line.ParseRequest(r)
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 
 		for _, event := range events {
@@ -30,10 +30,13 @@ func main() {
 	})
 
 	server := &http.Server{
-		Addr: ":8080",
+		Addr:    ":8080",
 		Handler: mux,
 	}
 
-	server.ListenAndServe()
 	log.Println("Listening at port 8080")
+	err = server.ListenAndServe()
+	if err != nil {
+		log.Fatal(err)
+	}
 }

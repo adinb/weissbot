@@ -1,2 +1,6 @@
 .env
 build
+.vscode/launch.json
+*.gb
+*.sav
+*.exe

@@ -13,6 +13,7 @@ func CreateAndStartHTTPServer(port string, metac chan<- meta.Meta, errc chan<- e
 	srv := &http.Server{Addr: ":" + port}
 	http.HandleFunc("/", handleMainPage)
 	http.HandleFunc("/meta", metaHandler)
+	http.HandleFunc("/line_webhook", handleLineEvent)
 
 	go func() {
 		fmt.Printf("HTTP Server listening at port %s\n", port)

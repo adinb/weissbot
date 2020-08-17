@@ -2,44 +2,32 @@ package main
 
 import (
 	"log"
-	"net/http"
 	"os"
+	"strconv"
 
+	"github.com/adinb/weissbot/pkg/line"
 	"github.com/joho/godotenv"
-	"github.com/line/line-bot-sdk-go/linebot"
 )
 
 func main() {
 	err := godotenv.Load()
-
-	mux := http.NewServeMux()
-	line, err := linebot.New(os.Getenv("LINE_CHANNEL_SECRET"), os.Getenv("LINE_CHANNEL_ACCESS_TOKEN"))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	mux.HandleFunc("/line", func(w http.ResponseWriter, r *http.Request) {
-		events, err := line.ParseRequest(r)
-		if err != nil {
-			log.Println(err)
-		}
+	lineChannelSecret := os.Getenv("LINE_CHANNEL_SECRET")
+	lineChannelAccessToken := os.Getenv("LINE_CHANNEL_ACCESS_TOKEN")
 
-		for _, event := range events {
-			if event.Type == linebot.EventTypeMessage {
-				message := (event.Message).(*linebot.TextMessage)
-				log.Println(message.Text)
-			}
-		}
-	})
-
-	server := &http.Server{
-		Addr:    ":8080",
-		Handler: mux,
-	}
-
-	log.Println("Listening at port 8080")
-	err = server.ListenAndServe()
+	port, err := strconv.Atoi(os.Getenv("LINE_WEBHOOK_PORT"))
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	lineClient := line.NewLineClient(lineChannelSecret, lineChannelAccessToken)
+	lineWebhook := line.NewWebhookServer(
+		lineClient, 
+		line.WebhookOptions{Path: "/line", Port: uint(port)},
+	)
+
+	lineWebhook.Start()
 }

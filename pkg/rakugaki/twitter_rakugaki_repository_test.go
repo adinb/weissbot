@@ -1,16 +1,16 @@
 package rakugaki
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
 	"testing"
 
-	"github.com/adinb/weissbot/internal/pkg/twitter"
+	"github.com/adinb/weissbot/pkg/twitter"
 )
 
 type mockTwitterClient struct {
 	isFailed bool
-	tweets []twitter.Tweet
+	tweets   []twitter.Tweet
 }
 
 func (t *mockTwitterClient) FindTweets(query string) ([]twitter.Tweet, error) {
@@ -39,7 +39,7 @@ func TestTwitterRakugakiRepositoryListSuccess(t *testing.T) {
 		return
 	}
 
-	for i, r := range(rakugakiList) {
+	for i, r := range rakugakiList {
 		if r.ImageURL != tweets[i].MediaURLs[0] || r.SourceURL != tweets[i].URL || r.Rating != tweets[i].FavoriteCount {
 			t.Error("Record mismatch")
 			fmt.Println(r)

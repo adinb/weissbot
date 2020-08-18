@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/adinb/weissbot/internal/pkg/meta"
+	"github.com/adinb/weissbot/pkg/meta"
 )
 
 func createWeissMetaHandler(channel chan<- meta.Meta) func(w http.ResponseWriter, r *http.Request) {

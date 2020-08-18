@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/adinb/weissbot/internal/pkg/meta"
+	"github.com/adinb/weissbot/pkg/meta"
 )
 
 func CreateAndStartHTTPServer(port string, metac chan<- meta.Meta, errc chan<- error) *http.Server {

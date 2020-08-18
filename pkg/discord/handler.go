@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/adinb/weissbot/internal/pkg/cotd"
-	"github.com/adinb/weissbot/internal/pkg/mtg"
-	"github.com/adinb/weissbot/internal/pkg/rakugaki"
-	"github.com/adinb/weissbot/internal/pkg/sakuga"
+	"github.com/adinb/weissbot/pkg/cotd"
+	"github.com/adinb/weissbot/pkg/mtg"
+	"github.com/adinb/weissbot/pkg/rakugaki"
+	"github.com/adinb/weissbot/pkg/sakuga"
 	"github.com/bwmarrin/discordgo"
 )
 

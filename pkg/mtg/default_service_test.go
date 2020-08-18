@@ -1,29 +1,26 @@
 package mtg
 
 import (
-	"os"
 	"errors"
-	"strings"
-	"testing"
-	"image/jpeg"
-	"image/png"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strings"
+	"testing"
 )
 
 type mockMTGRepository struct {
 	isFailed bool
-	cards []*MagicCard
+	cards    []*MagicCard
 }
 
-func (r *mockMTGRepository) Find(query string) ([]*MagicCard, error){
+func (r *mockMTGRepository) Find(query string) ([]*MagicCard, error) {
 	if r.isFailed {
 		return nil, errors.New("Failed to find the card")
 	}
 
 	var results []*MagicCard
-	for _, card := range(r.cards) {
+	for _, card := range r.cards {
 		if strings.Contains(card.Name, query) {
 			results = append(results, card)
 		}
@@ -61,33 +58,6 @@ func TestDefaultServiceSearchCardByNameSuccess(t *testing.T) {
 
 	if len(results) != 2 {
 		t.Error("Incorrect returned results", results)
-	}
-}
-
-func TestCombineImage(t *testing.T) {
-	imgA, err := os.Open("testdata/a.png")
-	if err != nil {
-		t.Error("Failed to load test file")
-	}
-
-	pngA, err := png.Decode(imgA)
-	if err != nil {
-		t.Error("Failed to decode image")
-	}
-
-	imgB, err := os.Open("testdata/b.png")
-	if err != nil {
-		t.Error("Failed to load test file")
-	}
-
-	pngB, err := png.Decode(imgB)
-	if err != nil {
-		t.Error("Failed to decode image")
-	}
-
-	_, err = jpeg.Decode(CombineImage(pngA, pngB))
-	if err != nil {
-		t.Error("Failed to decode the resulting image")
 	}
 }
 

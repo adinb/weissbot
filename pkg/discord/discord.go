@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/adinb/weissbot/internal/pkg/meta"
-	"github.com/adinb/weissbot/internal/pkg/cotd"
-	"github.com/adinb/weissbot/internal/pkg/mtg"
-	"github.com/adinb/weissbot/internal/pkg/rakugaki"
-	"github.com/adinb/weissbot/internal/pkg/sakuga"
-	"github.com/adinb/weissbot/internal/pkg/twitter"
+	"github.com/adinb/weissbot/pkg/cotd"
+	"github.com/adinb/weissbot/pkg/meta"
+	"github.com/adinb/weissbot/pkg/mtg"
+	"github.com/adinb/weissbot/pkg/rakugaki"
+	"github.com/adinb/weissbot/pkg/sakuga"
+	"github.com/adinb/weissbot/pkg/twitter"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -67,8 +67,8 @@ func NewDiscordController(env string, twitterToken string, discordToken string, 
 	sakugaHttpClient := http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			req.URL.Scheme = "https"
-        	return nil
-    	},
+			return nil
+		},
 	}
 	sakugaRepository := sakuga.SakugabooruRepository{Client: &sakugaHttpClient, BaseURL: "https://www.sakugabooru.com/post/random"}
 	controller.sakugaService = &sakuga.DefaultService{Repo: &sakugaRepository}

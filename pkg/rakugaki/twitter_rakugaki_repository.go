@@ -1,7 +1,7 @@
 package rakugaki
 
 import (
-	"github.com/adinb/weissbot/internal/pkg/twitter"
+	"github.com/adinb/weissbot/pkg/twitter"
 )
 
 type TwitterRakugakiRepository struct {

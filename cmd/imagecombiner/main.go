@@ -5,7 +5,7 @@ import (
 	"image/jpeg"
 	"os"
 
-	"github.com/adinb/weissbot/internal/pkg/mtg"
+	"github.com/adinb/weissbot/pkg/mtg"
 )
 
 func main() {

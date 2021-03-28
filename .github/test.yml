@@ -1,10 +1,13 @@
 ---
-name: Unit Test on Pull Request to Master
+name: Unit Test on Pull Request to master and development
 
 on:
   pull_request:
     branches:
       - master
+  push:
+    branches:
+      - development
 
 jobs:
   lint:

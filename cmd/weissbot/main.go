@@ -8,9 +8,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/adinb/weissbot/internal/pkg/controller/discord"
-	"github.com/adinb/weissbot/internal/pkg/controller/http"
-	"github.com/adinb/weissbot/internal/pkg/meta"
+	"github.com/adinb/weissbot/pkg/discord"
+	"github.com/adinb/weissbot/pkg/http"
+	"github.com/adinb/weissbot/pkg/meta"
 	"github.com/joho/godotenv"
 )
 

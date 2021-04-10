@@ -37,5 +37,5 @@ jobs:
           name: weissbot
       - uses: jfrog/setup-jfrog-cli@v1
       - run: |
-        "jfrog c add --username $ARTIFACTORY_USERNAME --apikey $ARTIFACTORY_DEPLOY_TOKEN --artifactory-url $ARTIFACTORY_BASE_URL adinb"
-        "jfrog rt u weissbot weissbot-generic-prod-local/linux/amd64/ --server-id adinb"
+          jfrog c add --username $ARTIFACTORY_USERNAME --apikey $ARTIFACTORY_DEPLOY_TOKEN --artifactory-url $ARTIFACTORY_BASE_URL adinb
+          jfrog rt u weissbot weissbot-generic-prod-local/linux/amd64/ --server-id adinb

@@ -1,0 +1,41 @@
+---
+name: Build artifact on Release
+
+on:
+  release:
+    types: ["published"]
+
+jobs:
+  build:
+    name: Build artifact for amd64 linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Download Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.16.2'
+      - name: Build weissbot
+        run: go build ./cmd/weissbot
+      - name: Upload Github Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: weissbot
+          path: weissbot
+          retention-days: 1
+  upload_artifactory:
+    name: Upload amd64 linux artifact to artifactory 
+    env:
+      CI: "true"
+      ARTIFACTORY_USERNAME: ${{ secrets.ARTIFACTORY_DEPLOY_USERNAME }}
+      ARTIFACTORY_DEPLOY_TOKEN: ${{ secrets.ARTIFACTORY_DEPLOY_TOKEN }}
+      ARTIFACTORY_BASE_URL: ${{ secrets.ARTIFACTORY_BASE_URL }}
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: weissbot
+      - uses: jfrog/setup-jfrog-cli@v1
+      - run: |
+          jfrog c add --username $ARTIFACTORY_USERNAME --apikey $ARTIFACTORY_DEPLOY_TOKEN --artifactory-url $ARTIFACTORY_BASE_URL adinb
+          jfrog rt u weissbot weissbot-generic-prod-local/linux/amd64/ --server-id adinb

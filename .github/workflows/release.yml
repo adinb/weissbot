@@ -14,9 +14,12 @@ jobs:
       ARTIFACTORY_USERNAME: ${{ secrets.ARTIFACTORY_DEPLOY_USERNAME }}
       ARTIFACTORY_DEPLOY_TOKEN: ${{ secrets.ARTIFACTORY_DEPLOY_TOKEN }}
       ARTIFACTORY_BASE_URL: ${{ secrets.ARTIFACTORY_BASE_URL }}
+      VERSION: ${{ github.event.release.tag_name }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          fetch-depth: ''
       - name: Download Go
         uses: actions/setup-go@v2
         with:
@@ -25,5 +28,6 @@ jobs:
         run: go build ./cmd/weissbot
       - uses: jfrog/setup-jfrog-cli@v1
       - run: |
-          jfrog c add --username $ARTIFACTORY_USERNAME --apikey $ARTIFACTORY_DEPLOY_TOKEN --artifactory-url $ARTIFACTORY_BASE_URL adinb
-          jfrog rt u weissbot weissbot-generic-prod-local/linux/amd64/ --server-id adinb
+          jfrog rt c add --username "$ARTIFACTORY_USERNAME" --apikey "$ARTIFACTORY_DEPLOY_TOKEN"\
+            --artifactory-url "$ARTIFACTORY_BASE_URL" adinb
+      - run: jfrog rt u weissbot "weissbot-generic-prod-local/${VERSION}linux/amd64/" --server-id adinb

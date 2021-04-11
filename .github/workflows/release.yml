@@ -29,7 +29,7 @@ jobs:
       - uses: jfrog/setup-jfrog-cli@v1
       - run: >
           jfrog rt u weissbot "weissbot-generic-prod-local/${VERSION}linux/amd64/"
-            --server-id adinb
-            --url "$ARTIFACTORY_BASE_URL" 
-            --user "$ARTIFACTORY_USERNAME" 
-            --access-token "$ARTIFACTORY_DEPLOY_TOKEN"
+          --server-id adinb
+          --url "$ARTIFACTORY_BASE_URL"
+          --user "$ARTIFACTORY_USERNAME"
+          --access-token "$ARTIFACTORY_DEPLOY_TOKEN"

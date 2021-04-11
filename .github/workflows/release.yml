@@ -27,6 +27,9 @@ jobs:
       - name: Build weissbot
         run: go build ./cmd/weissbot
       - uses: jfrog/setup-jfrog-cli@v1
-      - run: |
-          jfrog rt c add --user "$ARTIFACTORY_USERNAME" --access-token "$ARTIFACTORY_DEPLOY_TOKEN" --url "$ARTIFACTORY_BASE_URL" adinb
-      - run: jfrog rt u weissbot "weissbot-generic-prod-local/${VERSION}linux/amd64/" --server-id adinb --url "$ARTIFACTORY_BASE_URL"
+      - run: >
+          jfrog rt u weissbot "weissbot-generic-prod-local/${VERSION}linux/amd64/"
+            --server-id adinb
+            --url "$ARTIFACTORY_BASE_URL" 
+            --user "$ARTIFACTORY_USERNAME" 
+            --access-token "$ARTIFACTORY_DEPLOY_TOKEN"

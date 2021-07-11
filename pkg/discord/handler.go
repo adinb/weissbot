@@ -2,6 +2,7 @@ package discord
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/adinb/weissbot/pkg/cotd"
@@ -13,8 +14,12 @@ import (
 
 const defaultWeissStatus = "with Schwarz | :weiss-help"
 
-func ready(s *discordgo.Session, event *discordgo.Event) {
-	s.UpdateStatus(0, defaultWeissStatus)
+func createReadyHandler(logger *log.Logger) func(*discordgo.Session, *discordgo.Event) {
+	return func(s *discordgo.Session, _ *discordgo.Event) {
+		if err := s.UpdateStatus(0, defaultWeissStatus); err != nil {
+			logger.Println(err)
+		}
+	}
 }
 
 func (d *DiscordController) createMessageCreateHandler(env string) func(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -29,62 +34,75 @@ func (d *DiscordController) createMessageCreateHandler(env string) func(s *disco
 		}
 
 		if strings.HasPrefix(m.Content, prefix+":weiss-help") {
-			sendHelpMessage(s, m)
+			if err := sendHelpMessage(s, m); err != nil {
+				d.logger.Println(err)
+				return
+			}
 			return
 		}
 
-		if strings.HasPrefix(m.Content, prefix+":cotd vg") {
+		if strings.HasPrefix(m.Content, prefix+":bushiroadcotd vg") {
 			cotd, err := d.vanguardCOTDService.GetCOTD()
 			if err != nil {
-				d.errorChannel <- err
+				d.logger.Println(err)
 				return
 			}
 
-			sendCOTD(cotd, s, m)
+			if err = sendCOTD(cotd, s, m); err != nil {
+				d.logger.Println(err)
+			}
 			return
 		}
 
-		if strings.HasPrefix(m.Content, prefix+":cotd bf") {
+		if strings.HasPrefix(m.Content, prefix+":bushiroadcotd bf") {
 			cotd, err := d.buddyfightCOTDService.GetCOTD()
 			if err != nil {
-				d.errorChannel <- err
+				d.logger.Println(err)
 				return
 			}
 
-			sendCOTD(cotd, s, m)
+			if err = sendCOTD(cotd, s, m); err != nil {
+				d.logger.Println(err)
+			}
 			return
 		}
 
-		if strings.HasPrefix(m.Content, prefix+":cotd ws") {
+		if strings.HasPrefix(m.Content, prefix+":bushiroadcotd ws") {
 			cotd, err := d.weissschwarzCOTDService.GetCOTD()
 			if err != nil {
-				d.errorChannel <- err
+				d.logger.Println(err)
 				return
 			}
 
-			sendCOTD(cotd, s, m)
+			if err = sendCOTD(cotd, s, m); err != nil {
+				d.logger.Println(err)
+			}
 			return
 		}
 
 		if strings.HasPrefix(m.Content, prefix+":dailysakuga") {
-			sakuga, err := d.sakugaService.GetSakuga()
+			sakugas, err := d.sakugaService.GetSakuga()
 			if err != nil {
-				d.errorChannel <- err
+				d.logger.Println(err)
 				return
 			}
 
-			sendDailySakuga(sakuga, s, m)
+			if err = sendDailySakuga(sakugas, s, m); err != nil {
+				d.logger.Println(err)
+			}
 			return
 		}
 
 		if strings.HasPrefix(m.Content, prefix+":dailyrkgk") {
 			rkgk, err := d.rakugakiService.GetTopRakugaki(100)
 			if err != nil {
-				d.errorChannel <- err
+				d.logger.Println(err)
 				return
 			}
 
-			sendDailyRkgk(rkgk, s, m)
+			if err = sendDailyRkgk(rkgk, s, m); err != nil {
+				d.logger.Println(err)
+			}
 			return
 		}
 
@@ -115,22 +133,24 @@ func sendDailyRkgk(rkgk rakugaki.Rakugaki, s *discordgo.Session, m *discordgo.Me
 
 	embedImage := discordgo.MessageEmbedImage{URL: rkgk.ImageURL}
 	embed := discordgo.MessageEmbed{Image: &embedImage}
-	s.ChannelMessageSendEmbed(channel.ID, &embed)
+	if _, err = s.ChannelMessageSendEmbed(channel.ID, &embed); err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func sendHelpMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
+func sendHelpMessage(s *discordgo.Session, m *discordgo.MessageCreate) error {
 	channel, err := s.State.Channel(m.ChannelID)
 	if err != nil {
-		return
+		return err
 	}
 
 	fields := make([]*discordgo.MessageEmbedField, 0)
 
 	cardOfTheDayField := new(discordgo.MessageEmbedField)
 	cardOfTheDayField.Name = "Card of The Day"
-	cardOfTheDayField.Value = "Weiss can help you get **Vanguard** | **Buddyfight** | **Weiss Schwarz** CoTD by using `:cotd vg` | `:cotd bf` | `:cotd ws` respectively"
+	cardOfTheDayField.Value = "Weiss can help you get **Vanguard** | **Buddyfight** | **Weiss Schwarz** CoTD by using `:bushiroadcotd vg` | `:bushiroadcotd bf` | `:bushiroadcotd ws` respectively"
 
 	dailyRkgkField := new(discordgo.MessageEmbedField)
 	dailyRkgkField.Name = "Daily Rakugaki"
@@ -156,10 +176,12 @@ func sendHelpMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 	embed.Fields = fields
 	embed.Footer = &footer
 
-	s.ChannelMessageSendEmbed(channel.ID, &embed)
+	_, err = s.ChannelMessageSendEmbed(channel.ID, &embed)
 	if err != nil {
-		return
+		return err
 	}
+
+	return nil
 }
 
 func sendCOTD(cards []cotd.COTD, s *discordgo.Session, m *discordgo.MessageCreate) error {
@@ -177,7 +199,9 @@ func sendCOTD(cards []cotd.COTD, s *discordgo.Session, m *discordgo.MessageCreat
 		embedImage := discordgo.MessageEmbedImage{URL: card.ImageURL}
 		embed := discordgo.MessageEmbed{Image: &embedImage}
 
-		s.ChannelMessageSendEmbed(channel.ID, &embed)
+		if _, err = s.ChannelMessageSendEmbed(channel.ID, &embed); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -217,12 +241,14 @@ func sendMTGSearchResult(cards []*mtg.MagicCard, s *discordgo.Session, m *discor
 		verb = "cards"
 	}
 
-	s.ChannelMessageSend(channel.ID, fmt.Sprintf("I found **%d** %s with **%s** in its name", len(cards), verb, name))
+	if _, err = s.ChannelMessageSend(channel.ID, fmt.Sprintf("I found **%d** %s with **%s** in its name", len(cards), verb, name)); err != nil {
+		return err
+	}
 
 	for _, card := range cards {
 		var imageURL string
 		var embed discordgo.MessageEmbed
-		var complex discordgo.MessageSend
+		var m discordgo.MessageSend
 
 		if len(card.Faces) == 2 {
 			imgA, err := mtg.RetrievePNG(card.Faces[0].ImageURIs.PNG)
@@ -241,7 +267,7 @@ func sendMTGSearchResult(cards []*mtg.MagicCard, s *discordgo.Session, m *discor
 			var imgFile discordgo.File
 			imgFile.Name = card.ID + ".jpg"
 			imgFile.Reader = tiledImageReader
-			complex.Files = append(complex.Files, &imgFile)
+			m.Files = append(m.Files, &imgFile)
 			imageURL = "attachment://" + card.ID + ".jpg"
 		} else {
 			imageURL = card.Faces[0].ImageURIs.PNG
@@ -286,12 +312,11 @@ func sendMTGSearchResult(cards []*mtg.MagicCard, s *discordgo.Session, m *discor
 			card.SetName,
 			card.ReleaseDate)
 
-		complex.Embed = &embed
-		complex.Tts = false
+		m.Embed = &embed
+		m.Tts = false
 
-		s.ChannelMessageSendComplex(channel.ID, &complex)
+		_, err = s.ChannelMessageSendComplex(channel.ID, &m)
 		if err != nil {
-			fmt.Println(err.Error())
 			return err
 		}
 	}

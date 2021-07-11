@@ -1,12 +1,11 @@
 package discord
 
 import (
-	"fmt"
+	"log"
 	"net/http"
 	"time"
 
 	"github.com/adinb/weissbot/pkg/cotd"
-	"github.com/adinb/weissbot/pkg/meta"
 	"github.com/adinb/weissbot/pkg/mtg"
 	"github.com/adinb/weissbot/pkg/rakugaki"
 	"github.com/adinb/weissbot/pkg/sakuga"
@@ -16,6 +15,7 @@ import (
 )
 
 type DiscordController struct {
+	logger                  *log.Logger
 	vanguardCOTDService     cotd.ServiceContract
 	buddyfightCOTDService   cotd.ServiceContract
 	weissschwarzCOTDService cotd.ServiceContract
@@ -23,20 +23,17 @@ type DiscordController struct {
 	rakugakiService         rakugaki.ServiceContract
 	mtgService              mtg.ServiceContract
 	discordSession          *discordgo.Session
-	metaChannel             <-chan meta.Meta
-	errorChannel            chan<- error
 }
 
-func NewDiscordController(env string, twitterToken string, discordToken string, metac <-chan meta.Meta, errc chan<- error) DiscordController {
-	var controller DiscordController
+func NewDiscordService(env string, twitterToken string, discordToken string, logger *log.Logger) (*DiscordController, error) {
+	var controller = new(DiscordController)
 	discord, err := discordgo.New("Bot " + discordToken)
 	if err != nil {
-		errc <- err
+		return nil, err
 	}
 
+	controller.logger = logger
 	controller.discordSession = discord
-	controller.metaChannel = metac
-	controller.errorChannel = errc
 
 	client := http.Client{Timeout: time.Duration(10 * time.Second)}
 
@@ -80,35 +77,16 @@ func NewDiscordController(env string, twitterToken string, discordToken string, 
 	mtgRepository := mtg.ScryfallRepository{Client: &client, BaseURL: "https://api.scryfall.com"}
 	controller.mtgService = &mtg.DefaultService{Repo: &mtgRepository}
 
-	discord.AddHandler(ready)
+	discord.AddHandler(createReadyHandler(controller.logger))
 	discord.AddHandler(controller.createMessageCreateHandler(env))
 
-	return controller
+	return controller, nil
 }
 
-func (d *DiscordController) metaPoller() {
-	for meta := range d.metaChannel {
-		d.discordSession.UpdateStatus(0, meta.Status)
-	}
-}
-
-func (d *DiscordController) Start() {
-
-	go d.metaPoller()
-	go func() {
-		fmt.Println("Opening Discord websocket connection")
-		err := d.discordSession.Open()
-		if err != nil {
-			d.errorChannel <- err
-		}
-	}()
+func (d *DiscordController) Start() error {
+	return d.discordSession.Open()
 }
 
 func (d *DiscordController) Stop() error {
-	err := d.discordSession.Close()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return d.discordSession.Close()
 }

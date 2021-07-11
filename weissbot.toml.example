@@ -1,0 +1,17 @@
+[discord]
+enabled = true
+token = "discord-token"
+
+[line]
+enabled = true
+port = 8080
+channel_secret = "secret"
+channel_access_token = "access_token"
+
+[management]
+enabled = true
+api_key = "apikey"
+
+[twitter]
+enabled = true
+token = "token"

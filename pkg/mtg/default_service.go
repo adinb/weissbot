@@ -3,6 +3,8 @@ package mtg
 import (
 	"image"
 	"image/draw"
+
+	//"image/draw"
 	"image/jpeg"
 	"image/png"
 	"io"
@@ -23,22 +25,29 @@ func (s *DefaultService) SearchCardByName(name string) ([]*MagicCard, error) {
 }
 
 func TileImagesHorizontally(imgA image.Image, imgB image.Image) image.Image {
-	w := imgA.Bounds().Size().X + imgB.Bounds().Size().X
-	h := 0
-	if imgA.Bounds().Size().Y >= imgB.Bounds().Size().Y {
-		h = imgA.Bounds().Size().Y
-	} else {
-		h = imgB.Bounds().Size().Y
-	}
+	//w := imgA.Bounds().Size().X + imgB.Bounds().Size().X
+	//oldh := imgA.Bounds().Size().Y
+	h := imgA.Bounds().Size().Y + imgB.Bounds().Size().Y
+	//h := 0
+	//if imgA.Bounds().Size().Y >= imgB.Bounds().Size().Y {
+	//	h = imgA.Bounds().Size().Y
+	//} else {
+	//	h = imgB.Bounds().Size().Y
+	//}
 
-	tiledImage := image.NewRGBA(image.Rect(0, 0, w, h))
-	rectA := image.Rect(0, 0, imgA.Bounds().Size().X, imgA.Bounds().Size().Y)
-	rectB := image.Rect(imgA.Bounds().Size().X, 0, w, h)
+	//tiledImage := image.NewRGBA(image.Rect(0, 0, w, h))
+	//rectA := image.Rect(0, 0, imgA.Bounds().Size().X, imgA.Bounds().Size().Y)
+	//rectB := image.Rect(0, 0, w, h)
 
-	draw.Draw(tiledImage, rectA, imgA, image.Pt(0, 0), draw.Over)
-	draw.Draw(tiledImage, rectB, imgB, image.Pt(0, 0), draw.Over)
+	//draw.Draw(tiledImage, rectA, imgA, image.Pt(0, 0), draw.Over)
 
-	return tiledImage
+	extra := make([]uint8, imgA.Bounds().Size().X*imgA.Bounds().Size().Y*4)
+	imgA.(*image.NRGBA).Pix = append(imgA.(*image.NRGBA).Pix, extra...)
+	imgA.(*image.NRGBA).Rect = image.Rect(0, 0, imgA.Bounds().Size().X, h)
+	draw.Draw(imgA.(*image.NRGBA), imgA.(*image.NRGBA).Rect, imgB, image.Pt(0, imgB.Bounds().Size().Y*-1), draw.Over)
+
+	resultimage := imgA
+	return resultimage
 }
 
 func CreateImageReader(img image.Image) io.Reader {

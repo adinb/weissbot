@@ -14,7 +14,7 @@ type ScryfallRepository struct {
 
 // ScryfallObjectResource represents object resource from scryfall API
 type ScryfallObjectResource struct {
-	Object string             `json:"object"`
+	Object string       `json:"object"`
 	Data   []*MagicCard `json:"data"`
 }
 

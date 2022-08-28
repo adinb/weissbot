@@ -2,10 +2,11 @@ package discord
 
 import (
 	"fmt"
+	"github.com/adinb/weissbot/pkg/command"
 	"log"
 	"strings"
 
-	"github.com/adinb/weissbot/pkg/cotd"
+	"github.com/adinb/weissbot/pkg/config"
 	"github.com/adinb/weissbot/pkg/mtg"
 	"github.com/adinb/weissbot/pkg/rakugaki"
 	"github.com/adinb/weissbot/pkg/sakuga"
@@ -13,6 +14,7 @@ import (
 )
 
 const defaultWeissStatus = "with Schwarz | :weiss-help"
+const weissbotDiscordCommandPrefix = "?w"
 
 func createReadyHandler(logger *log.Logger) func(*discordgo.Session, *discordgo.Event) {
 	return func(s *discordgo.Session, _ *discordgo.Event) {
@@ -22,18 +24,19 @@ func createReadyHandler(logger *log.Logger) func(*discordgo.Session, *discordgo.
 	}
 }
 
-func (d *DiscordController) createMessageCreateHandler(env string) func(s *discordgo.Session, m *discordgo.MessageCreate) {
+func (d *DiscordController) createMessageCreateHandler(config *config.Root) func(s *discordgo.Session, m *discordgo.MessageCreate) {
 	return func(s *discordgo.Session, m *discordgo.MessageCreate) {
-		prefix := ""
+		prefix := weissbotDiscordCommandPrefix
+		env := config.Weissbot.Environment
 		if env != "production" {
-			prefix = ":test"
+			prefix = "test" + prefix
 		}
 
 		if m.Author.ID == s.State.User.ID {
 			return
 		}
 
-		if strings.HasPrefix(m.Content, prefix+":weiss-help") {
+		if strings.HasPrefix(m.Content, prefix+" help") {
 			if err := sendHelpMessage(s, m); err != nil {
 				d.logger.Println(err)
 				return
@@ -41,46 +44,23 @@ func (d *DiscordController) createMessageCreateHandler(env string) func(s *disco
 			return
 		}
 
-		if strings.HasPrefix(m.Content, prefix+":bushiroadcotd vg") {
-			cotd, err := d.vanguardCOTDService.GetCOTD()
-			if err != nil {
-				d.logger.Println(err)
+		// Temporary transition to the new command module
+		if botParameter, isValidCommand := command.ParseBotCommand(m.Content, prefix); isValidCommand {
+			if botParameter.Command == "cotd" {
+				result, err := d.cotdExecuter.Execute(botParameter.Args)
+				if err != nil {
+					d.logger.Println(err)
+					return
+				}
+
+				if err = sendCOTD(result, s, m); err != nil {
+					d.logger.Println(err)
+				}
 				return
 			}
-
-			if err = sendCOTD(cotd, s, m); err != nil {
-				d.logger.Println(err)
-			}
-			return
 		}
 
-		if strings.HasPrefix(m.Content, prefix+":bushiroadcotd bf") {
-			cotd, err := d.buddyfightCOTDService.GetCOTD()
-			if err != nil {
-				d.logger.Println(err)
-				return
-			}
-
-			if err = sendCOTD(cotd, s, m); err != nil {
-				d.logger.Println(err)
-			}
-			return
-		}
-
-		if strings.HasPrefix(m.Content, prefix+":bushiroadcotd ws") {
-			cotd, err := d.weissschwarzCOTDService.GetCOTD()
-			if err != nil {
-				d.logger.Println(err)
-				return
-			}
-
-			if err = sendCOTD(cotd, s, m); err != nil {
-				d.logger.Println(err)
-			}
-			return
-		}
-
-		if strings.HasPrefix(m.Content, prefix+":dailysakuga") {
+		if strings.HasPrefix(m.Content, prefix+" dailysakuga") {
 			sakugas, err := d.sakugaService.GetSakuga()
 			if err != nil {
 				d.logger.Println(err)
@@ -93,20 +73,22 @@ func (d *DiscordController) createMessageCreateHandler(env string) func(s *disco
 			return
 		}
 
-		if strings.HasPrefix(m.Content, prefix+":dailyrkgk") {
-			rkgk, err := d.rakugakiService.GetTopRakugaki(100)
-			if err != nil {
-				d.logger.Println(err)
+		if config.Twitter.Enabled {
+			if strings.HasPrefix(m.Content, prefix+" dailyrkgk") {
+				rkgk, err := d.rakugakiService.GetTopRakugaki(100)
+				if err != nil {
+					d.logger.Println(err)
+					return
+				}
+
+				if err = sendDailyRkgk(rkgk, s, m); err != nil {
+					d.logger.Println(err)
+				}
 				return
 			}
-
-			if err = sendDailyRkgk(rkgk, s, m); err != nil {
-				d.logger.Println(err)
-			}
-			return
 		}
 
-		if strings.HasPrefix(m.Content, prefix+":mtg-search") {
+		if strings.HasPrefix(m.Content, prefix+" mtg-search") {
 			index := strings.Index(m.Content, " ")
 			name := []byte(m.Content)[index+1:]
 			cards, err := d.mtgService.SearchCardByName(string(name))
@@ -184,7 +166,7 @@ func sendHelpMessage(s *discordgo.Session, m *discordgo.MessageCreate) error {
 	return nil
 }
 
-func sendCOTD(cards []cotd.COTD, s *discordgo.Session, m *discordgo.MessageCreate) error {
+func sendCOTD(result command.Result, s *discordgo.Session, m *discordgo.MessageCreate) error {
 	channel, err := s.State.Channel(m.ChannelID)
 	if err != nil {
 		return err
@@ -195,7 +177,7 @@ func sendCOTD(cards []cotd.COTD, s *discordgo.Session, m *discordgo.MessageCreat
 		return err
 	}
 
-	for _, card := range cards {
+	for _, card := range result.ImageMessages {
 		embedImage := discordgo.MessageEmbedImage{URL: card.ImageURL}
 		embed := discordgo.MessageEmbed{Image: &embedImage}
 

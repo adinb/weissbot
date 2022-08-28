@@ -1,10 +1,9 @@
 package config
 
 import (
-	"errors"
 	"fmt"
 	"github.com/BurntSushi/toml"
-	"io/ioutil"
+	"os"
 )
 
 const DefaultEnvironment = "test"
@@ -20,6 +19,8 @@ type Discord struct {
 
 type Line struct {
 	Enabled            bool
+	Addr               string
+	CommandPrefix      string `toml:"command_prefix"`
 	Port               uint16
 	ChannelSecret      string `toml:"channel_secret"`
 	ChannelAccessToken string `toml:"channel_access_token"`
@@ -35,7 +36,7 @@ type Twitter struct {
 	Token   string
 }
 
-type Config struct {
+type Root struct {
 	Weissbot   Weissbot
 	Discord    Discord
 	Line       Line
@@ -43,13 +44,13 @@ type Config struct {
 	Twitter    Twitter
 }
 
-var defaultConfig = Config{
+var defaultConfig = Root{
 	Weissbot: Weissbot{
 		Environment: DefaultEnvironment,
 	},
 }
 
-func Load(s string) (*Config, error) {
+func Load(s string) (*Root, error) {
 	cfg := &defaultConfig
 
 	if _, err := toml.Decode(s, &cfg); err != nil {
@@ -59,17 +60,16 @@ func Load(s string) (*Config, error) {
 	return cfg, nil
 }
 
-func LoadFile(filename string) (*Config, error) {
-	content, err := ioutil.ReadFile(filename)
+func LoadFile(filename string) (*Root, error) {
+	content, err := os.ReadFile(filename)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("loading config file: %w", err)
 	}
 
-	cfg, err := Load(string(content))
+	rootCfg, err := Load(string(content))
 	if err != nil {
-		err = errors.New(fmt.Sprintf("Failed to parse configuration file %s: %s", filename, err))
-		return nil, err
+		return nil, fmt.Errorf("parsing config file %s: %w", filename, err)
 	}
 
-	return cfg, nil
+	return rootCfg, nil
 }

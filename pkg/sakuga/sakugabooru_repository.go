@@ -1,16 +1,16 @@
 package sakuga
 
 import (
-	"strconv"
-	"net/http"
 	"errors"
+	"net/http"
+	"strconv"
 
 	"github.com/antchfx/htmlquery"
 )
 
 type SakugabooruRepository struct {
-	Client *http.Client
-	BaseURL    string
+	Client  *http.Client
+	BaseURL string
 }
 
 func (s SakugabooruRepository) Get() (Sakuga, error) {
@@ -30,6 +30,6 @@ func (s SakugabooruRepository) Get() (Sakuga, error) {
 	// The error is intentionally ignored because the HTML parser is very permissive.
 	doc, _ := htmlquery.Parse(resp.Body)
 	data := htmlquery.FindOne(doc, "//*[@id=\"highres\"]")
-	
+
 	return Sakuga{URL: htmlquery.SelectAttr(data, "href")}, nil
 }

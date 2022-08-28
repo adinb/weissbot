@@ -1,11 +1,13 @@
 package discord
 
 import (
+	"github.com/adinb/weissbot/pkg/command"
+	"github.com/adinb/weissbot/pkg/cotd"
 	"log"
 	"net/http"
 	"time"
 
-	"github.com/adinb/weissbot/pkg/cotd"
+	"github.com/adinb/weissbot/pkg/config"
 	"github.com/adinb/weissbot/pkg/mtg"
 	"github.com/adinb/weissbot/pkg/rakugaki"
 	"github.com/adinb/weissbot/pkg/sakuga"
@@ -15,19 +17,17 @@ import (
 )
 
 type DiscordController struct {
-	logger                  *log.Logger
-	vanguardCOTDService     cotd.ServiceContract
-	buddyfightCOTDService   cotd.ServiceContract
-	weissschwarzCOTDService cotd.ServiceContract
-	sakugaService           sakuga.ServiceContract
-	rakugakiService         rakugaki.ServiceContract
-	mtgService              mtg.ServiceContract
-	discordSession          *discordgo.Session
+	logger          *log.Logger
+	sakugaService   sakuga.ServiceContract
+	rakugakiService rakugaki.ServiceContract
+	mtgService      mtg.ServiceContract
+	discordSession  *discordgo.Session
+	cotdExecuter    command.Executer
 }
 
-func NewDiscordService(env string, twitterToken string, discordToken string, logger *log.Logger) (*DiscordController, error) {
+func New(config *config.Root, logger *log.Logger) (*DiscordController, error) {
 	var controller = new(DiscordController)
-	discord, err := discordgo.New("Bot " + discordToken)
+	discord, err := discordgo.New("Bot " + config.Discord.Token)
 	if err != nil {
 		return nil, err
 	}
@@ -35,31 +35,9 @@ func NewDiscordService(env string, twitterToken string, discordToken string, log
 	controller.logger = logger
 	controller.discordSession = discord
 
-	client := http.Client{Timeout: time.Duration(10 * time.Second)}
+	client := http.Client{Timeout: 10 * time.Second}
 
-	vanguardCOTDRepository := cotd.WebCOTDRepository{
-		WebpageURL:   "https://cf-vanguard.com/todays-card/",
-		ImagePath:    "//p[contains(@class, 'text-center')]/img[contains(@class, 'alignnone')]",
-		ImageBaseURL: "",
-		Client:       &client,
-	}
-	controller.vanguardCOTDService = &cotd.DefaultService{Repo: &vanguardCOTDRepository}
-
-	buddyfightCOTDRepository := cotd.WebCOTDRepository{
-		WebpageURL:   "https://fc-buddyfight.com/todays-card/",
-		ImagePath:    "//div[contains(@class, 'lp_bg')]/div/div/img",
-		ImageBaseURL: "",
-		Client:       &client,
-	}
-	controller.buddyfightCOTDService = &cotd.DefaultService{Repo: &buddyfightCOTDRepository}
-
-	weissschwarzCOTDRepository := cotd.WebCOTDRepository{
-		WebpageURL:   "https://ws-tcg.com/todays-card/",
-		ImagePath:    "//div[contains(@class, 'entry-content')]/p/img",
-		ImageBaseURL: "https://ws-tcg.com",
-		Client:       &client,
-	}
-	controller.weissschwarzCOTDService = &cotd.DefaultService{Repo: &weissschwarzCOTDRepository}
+	controller.cotdExecuter = cotd.NewExecuter()
 
 	sakugaHttpClient := http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -70,20 +48,23 @@ func NewDiscordService(env string, twitterToken string, discordToken string, log
 	sakugaRepository := sakuga.SakugabooruRepository{Client: &sakugaHttpClient, BaseURL: "https://www.sakugabooru.com/post/random"}
 	controller.sakugaService = &sakuga.DefaultService{Repo: &sakugaRepository}
 
-	twitterClient := twitter.New(&client, "https://api.twitter.com/1.1/search/tweets.json?q=", twitterToken)
-	rakugakiTwitterRepository := rakugaki.TwitterRakugakiRepository{Client: &twitterClient}
-	controller.rakugakiService = &rakugaki.DefaultService{Repo: &rakugakiTwitterRepository}
+	if config.Twitter.Enabled {
+		twitterClient := twitter.New(&client, config.Twitter.Token)
+		rakugakiTwitterRepository := rakugaki.TwitterRakugakiRepository{Client: twitterClient}
+		controller.rakugakiService = &rakugaki.DefaultService{Repo: &rakugakiTwitterRepository}
+	}
 
 	mtgRepository := mtg.ScryfallRepository{Client: &client, BaseURL: "https://api.scryfall.com"}
 	controller.mtgService = &mtg.DefaultService{Repo: &mtgRepository}
 
 	discord.AddHandler(createReadyHandler(controller.logger))
-	discord.AddHandler(controller.createMessageCreateHandler(env))
+	discord.AddHandler(controller.createMessageCreateHandler(config))
 
 	return controller, nil
 }
 
 func (d *DiscordController) Start() error {
+	d.logger.Println("Discord bot started")
 	return d.discordSession.Open()
 }
 
